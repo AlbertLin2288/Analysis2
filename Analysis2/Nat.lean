@@ -1,13 +1,21 @@
--- import Analysis2.Logic
+import Analysis2.Operator
+import Analysis2.Structure
+import Analysis2.Comp
+import Analysis2.CompStructure
 noncomputable section
 namespace my
 open Classical
+open Comp
+open Zero One
+open Monoid CommMonoid SemiRing CommSemiRing
 
 axiom ℕ : Type
 
 namespace ℕ
 
-  axiom zero : ℕ
+  axiom _zero : ℕ
+
+  @[default_instance] instance : Zero ℕ := ⟨_zero⟩
 
   axiom succ : ℕ → ℕ
 
@@ -23,7 +31,10 @@ namespace ℕ
 
     section nums
 
-      def one : ℕ := zero.succ
+      def _one : ℕ := zero.succ
+      @[default_instance] instance : One ℕ := ⟨_one⟩
+      theorem one_def : one = _one := rfl
+
       def two : ℕ := one.succ
       def three : ℕ := two.succ
       def four : ℕ := three.succ
@@ -39,6 +50,9 @@ namespace ℕ
       theorem five_eq_succ_four : five = four.succ := rfl
       theorem six_eq_succ_five : six = five.succ := rfl
       theorem seven_eq_succ_six : seven = six.succ := rfl
+
+      theorem zero_ne_one : zero ≠ one :=
+        fun h => succ_ne_zero (h.substr one_eq_succ_zero)
 
     end nums
 
@@ -68,23 +82,25 @@ namespace ℕ
     def add : ℕ → ℕ → ℕ :=
       fun a => ind a (fun _ x => x.succ)
 
-    theorem add_zero : ∀(n : ℕ), n.add zero = n :=
+    instance : Add ℕ := {add}
+
+    theorem add_zero : ∀(n : ℕ), n + zero = n :=
       fun _ => (ind_spec _ _).left
 
-    theorem add_succ : ∀(n m : ℕ), n.add m.succ = (n.add m).succ :=
+    theorem add_succ : ∀(n m : ℕ), n + m.succ = (n + m).succ :=
       fun _ m => (ind_spec _ _).right m
 
-    theorem zero_add : ∀(n : ℕ), zero.add n = n :=
-      ind zero.add_zero (fun m (hm : zero.add m = m) => Eq.subst (motive := (zero.add m.succ = succ .)) hm (add_succ zero m))
+    theorem zero_add : ∀(n : ℕ), zero + n = n :=
+      ind zero.add_zero (fun m (hm : zero + m = m) => Eq.subst (motive := (zero + m.succ = succ .)) hm (add_succ zero m))
 
-    theorem succ_add : ∀(n m : ℕ), n.succ.add m = (n.add m).succ := by
+    theorem succ_add : ∀(n m : ℕ), n.succ + m = (n + m).succ := by
         intro n
         apply ind
         simp only [add_zero]
         intro a ha
         simp only [add_succ, ha]
 
-    theorem add_comm : ∀(n m : ℕ), n.add m = m.add n := by
+    theorem add_comm : ∀(n m : ℕ), n + m = m + n := by
       intro n
       apply ind
       case h0 => simp only [add_zero,zero_add]
@@ -92,7 +108,7 @@ namespace ℕ
         intro m hm
         simp only [add_succ, succ_add, hm]
 
-    theorem add_assoc : ∀ (a b c : ℕ), (a.add b).add c = a.add (b.add c) := by
+    theorem add_assoc : ∀ (a b c : ℕ), (a + b) + c = a + (b + c) := by
       intro a b
       apply ind
       case h0 => simp only [add_zero]
@@ -100,18 +116,27 @@ namespace ℕ
         intro c hc
         simp only [add_succ, hc]
 
-    instance : Std.Associative (α := ℕ) add := ⟨add_assoc⟩
-    instance : Std.Commutative (α := ℕ) add := ⟨add_comm⟩
+    -- instance : Std.Associative (α := ℕ) add := ⟨add_assoc⟩
+    -- instance : Std.Commutative (α := ℕ) add := ⟨add_comm⟩
 
-    theorem add_right_comm : ∀ (a b c : ℕ), (a.add b).add c = (a.add c).add b := by
-      intros
-      ac_nf
+    instance : Monoid ℕ where
+      add_zero := add_zero
+      zero_add := zero_add
+      add_assoc := add_assoc
 
-    theorem add_left_comm : ∀ (a b c : ℕ), a.add (b.add c) = b.add (a.add c) := by
-      intros
-      ac_nf
+    instance : CommMonoid ℕ where
+      add_comm := add_comm
 
-    theorem add_left_inj {a b : ℕ} : ∀ (c : ℕ), a.add c = b.add c ↔ a = b := by
+
+    -- theorem add_right_comm : ∀ (a b c : ℕ), (a + b) + c = (a + c) + b := by
+    --   intros
+    --   ac_nf
+
+    -- theorem add_left_comm : ∀ (a b c : ℕ), a + (b + c) = b + (a + c) := by
+    --   intros
+    --   ac_nf
+
+    theorem add_left_inj {a b : ℕ} : ∀ (c : ℕ), a + c = b + c ↔ a = b := by
       intro c
       apply Iff.intro
       case mp =>
@@ -123,26 +148,26 @@ namespace ℕ
       case mpr =>
         intro h;simp only [h]
 
-    theorem add_right_inj {a b : ℕ} : ∀ (c : ℕ), c.add a = c.add b ↔ a = b := by
+    theorem add_right_inj {a b : ℕ} : ∀ (c : ℕ), c + a = c + b ↔ a = b := by
       intro c
       simp only [c.add_comm]
       exact add_left_inj c
 
-    theorem eq_zero_of_add_eq_zero_left {a b : ℕ} : a.add b = zero → a = zero :=
-      ind (h := fun b => a.add b = zero → a = zero) (fun h => h.subst a.add_zero.symm) (fun b' _ h => (succ_ne_zero (h.subst (a.add_succ b').symm)).elim) b
+    theorem eq_zero_of_add_eq_zero_left {a b : ℕ} : a + b = zero → a = zero :=
+      ind (h := fun b => a + b = zero → a = zero) (fun h => h.subst a.add_zero.symm) (fun b' _ h => (succ_ne_zero (h.subst (a.add_succ b').symm)).elim) b
 
-    theorem eq_zero_of_add_eq_zero_right {a b : ℕ} : a.add b = zero → b = zero :=
+    theorem eq_zero_of_add_eq_zero_right {a b : ℕ} : a + b = zero → b = zero :=
       fun h => eq_zero_of_add_eq_zero_left (h.subst (a.add_comm b).symm)
 
-    theorem add_right_eq_self_is_zero {a b : ℕ} : a.add b = a → b = zero :=
-      ind (h := fun a' => a'.add b = a' → b = zero) (fun h => h.subst b.zero_add.symm) (fun a' h h' => h (succ_inj _ a' (h'.subst (a'.succ_add _).symm))) a
+    theorem add_right_eq_self_is_zero {a b : ℕ} : a + b = a → b = zero :=
+      ind (h := fun a' => a' + b = a' → b = zero) (fun h => h.subst b.zero_add.symm) (fun a' h h' => h (succ_inj _ a' (h'.subst (a'.succ_add _).symm))) a
 
-    theorem add_left_eq_self_is_zero {a b : ℕ} : a.add b = b → a = zero :=
+    theorem add_left_eq_self_is_zero {a b : ℕ} : a + b = b → a = zero :=
       (add_comm _ _).substr add_right_eq_self_is_zero
 
     section num
 
-      theorem add_one_eq_succ : ∀ (n : ℕ), n.add one = n.succ := by
+      theorem add_one_eq_succ : ∀ (n : ℕ), n + one = n.succ := by
         intro n
         rw [one_eq_succ_zero, add_succ, add_zero]
 
@@ -153,22 +178,24 @@ namespace ℕ
   section mul
 
     def mul : ℕ → ℕ → ℕ :=
-      fun a => ind zero (fun _ x => x.add a)
+      fun a => ind zero (fun _ x => x + a)
 
-    theorem mul_zero : ∀(n : ℕ), n.mul zero = zero :=
+    instance : Mul ℕ := {mul}
+
+    theorem mul_zero : ∀(n : ℕ), n * zero = zero :=
       fun _ => (ind_spec _ _).left
 
-    theorem mul_succ : ∀(n m : ℕ), n.mul m.succ = (n.mul m).add n :=
+    theorem mul_succ : ∀(n m : ℕ), n * m.succ = (n * m) + n :=
       fun _ m => (ind_spec _ _).right m
 
-    theorem mul_one : ∀(n : ℕ), n.mul one = n := by
+    theorem mul_one : ∀(n : ℕ), n * one = n := by
       intro n
       rw [one_eq_succ_zero, mul_succ, mul_zero, zero_add]
 
-    theorem zero_mul : ∀(n : ℕ), zero.mul n = zero :=
-      ind zero.mul_zero fun n hn => Eq.substr (zero.mul_succ n) (Eq.substr (zero.mul n).add_zero hn)
+    theorem zero_mul : ∀(n : ℕ), zero * n = zero :=
+      ind (ℕ.mul_zero zero) fun n hn => Eq.substr (ℕ.mul_succ zero n) (Eq.substr (zero * n).add_zero hn)
 
-    theorem succ_mul : ∀(n m : ℕ), n.succ.mul m = (n.mul m).add m := by
+    theorem succ_mul : ∀(n m : ℕ), n.succ * m = (n * m) + m := by
       intro n
       apply ind
       case h0 => simp only [mul_zero, add_zero]
@@ -176,11 +203,11 @@ namespace ℕ
         intro m hm
         simp only [mul_succ, hm, add_succ, add_right_comm]
 
-    theorem one_mul : ∀(n : ℕ), one.mul n = n := by
+    theorem one_mul : ∀(n : ℕ), one * n = n := by
       intro n
       rw [one_eq_succ_zero, succ_mul, zero_mul, zero_add]
 
-    theorem mul_comm : ∀(n m : ℕ), n.mul m = m.mul n := by
+    theorem mul_comm : ∀(n m : ℕ), n * m = m * n := by
       intro n
       apply ind
       case h0 => simp only [mul_zero,zero_mul]
@@ -188,7 +215,7 @@ namespace ℕ
         intro m hm
         simp only [mul_succ, succ_mul, hm]
 
-    theorem add_mul : ∀(a b c : ℕ), (a.add b).mul c = (a.mul c).add (b.mul c) := by
+    theorem add_mul : ∀(a b c : ℕ), (a + b) * c = (a * c) + (b * c) := by
       intro a b
       apply ind
       case h0 => simp only [mul_zero, add_zero]
@@ -198,14 +225,14 @@ namespace ℕ
           mul_succ, mul_succ, mul_succ, hc,
           ← add_assoc,
           ← add_assoc,
-          add_right_comm (a.mul c)
+          add_right_comm (a * c)
         ]
 
-    theorem mul_add : ∀(a b c : ℕ), a.mul (b.add c) = (a.mul b).add (a.mul c) := by
+    theorem mul_add : ∀(a b c : ℕ), a * (b + c) = (a * b) + (a * c) := by
       intro a _ _
       rw [mul_comm, add_mul, mul_comm a, mul_comm a]
 
-    theorem mul_assoc : ∀ (a b c : ℕ), (a.mul b).mul c = a.mul (b.mul c) := by
+    theorem mul_assoc : ∀ (a b c : ℕ), (a * b) * c = a * (b * c) := by
       intro a b
       apply ind
       case h0 => simp only [mul_zero]
@@ -213,139 +240,104 @@ namespace ℕ
         intro c hc
         simp only [mul_succ, hc, mul_add]
 
-    instance : Std.Associative (α := ℕ) mul := ⟨mul_assoc⟩
-    instance : Std.Commutative (α := ℕ) mul := ⟨mul_comm⟩
+    instance : SemiRing ℕ where
+      mul_one := mul_one
+      one_mul := one_mul
+      mul_assoc := mul_assoc
+      mul_zero := mul_zero
+      zero_mul := zero_mul
+      mul_add := mul_add
+      add_mul := add_mul
 
-    theorem mul_eq_zero {a b : ℕ} : a.mul b = zero → a = zero ∨ b = zero :=
-      fun h => (em (a = zero)).elim Or.inl fun h0 => Or.inr (eq_zero_of_add_eq_zero_right (((nonzero_is_succ h0).choose_spec.subst (motive := (·.mul b = zero)) h).subst (ℕ.succ_mul _ _).symm))
+    instance : CommSemiRing ℕ where
+      mul_comm := mul_comm
+
+    theorem mul_eq_zero {a b : ℕ} : a * b = zero → a = zero ∨ b = zero :=
+      fun h => (em (a = zero)).elim Or.inl fun h0 => Or.inr (eq_zero_of_add_eq_zero_right (((nonzero_is_succ h0).choose_spec.subst (motive := (· * b = zero)) h).subst (ℕ.succ_mul _ _).symm))
 
   end mul
 
   section comp
 
     def le : ℕ → ℕ → Prop :=
-      fun n m => ∃(x : ℕ), m = n.add x
+      fun n m => ∃(x : ℕ), m = n + x
 
-    @[reducible] def ge (n m : ℕ) : Prop := le m n
+    theorem le_refl : ∀ (a : ℕ), a.le a :=
+      (⟨zero, ·.add_zero.symm⟩)
 
-    def lt : ℕ → ℕ → Prop :=
-      fun n m => n.le m ∧ n ≠ m
+    theorem le_trans : ∀(a b c : ℕ), a.le b → b.le c → a.le c :=
+      fun _ _ _ ⟨x1, hx1⟩ ⟨x2, hx2⟩ => ⟨x1 + x2, hx2.substr (hx1.substr (add_assoc _ x1 x2))⟩
 
-    @[reducible] def gt (n m : ℕ) : Prop := lt m n
+    theorem le_antisymm : ∀(a b : ℕ), a.le b → b.le a → a = b := by
+      intro _ _ ⟨_, hx⟩ ⟨_, hx'⟩
+      rw [hx, add_assoc] at hx'
+      replace hx' := eq_zero_of_add_eq_zero_left (add_right_eq_self_is_zero hx'.symm)
+      rw [hx, hx', add_zero]
 
-    theorem le_of_eq {n m : ℕ} : n = m → n.le m :=
-      fun h => ⟨zero, n.add_zero.substr h.symm⟩
+    theorem le_total : ∀(a b : ℕ), a.le b ∨ b.le a := by
+      intro a b
+      apply byContradiction
+      simp only [not_or]
+      intro ⟨hnab, hnba⟩
+      have h : ∀(n : ℕ), ¬(a.le (b + n)) := ind (b.add_zero.substr hnab) (by
+        intro n hn ⟨x, hx⟩
+        cases x.zero_or_is_succ
+        case inl h0 =>
+          rw [h0, add_zero] at hx
+          exact hnba ⟨n.succ, hx.symm⟩
+        case inr hn0 =>
+          have ⟨x', hx'⟩ := hn0
+          rw [hx', add_succ, add_succ] at hx
+          exact hn ⟨x', (succ_inj _ _ hx)⟩
+      )
+      exact (h a) ((add_comm b a).substr ⟨b, rfl⟩)
 
-    theorem le_self : ∀ (n : ℕ), n.le n := fun _ => le_of_eq rfl
+    @[default_instance] instance : Comp ℕ :=
+      {le, le_refl, le_trans, le_antisymm, le_total}
 
-    theorem le_of_lt {n m : ℕ} : n.lt m → n.le m := And.left
-
-    theorem ne_of_lt {n m : ℕ} : n.lt m → n ≠ m := And.right
-
-    theorem not_lt_self : ∀ (n : ℕ), ¬ n.lt n := fun _ h => h.right rfl
-
-    theorem lt_or_eq_of_le {n m : ℕ} : n.le m → n.lt m ∨ n = m :=
-      fun h => (em (n = m)).elim (Or.inr ·) (Or.inl ⟨h, ·⟩)
-
-    theorem eq_or_gt_of_ge {n m : ℕ} : n.ge m → n = m ∨ n.gt m :=
-      fun h => (lt_or_eq_of_le h).elim (Or.inr ·) (Or.inl ·.symm)
-
-    theorem zero_le : ∀(n : ℕ), zero.le n :=
+    theorem zero_le : ∀(n : ℕ), zero ≤ n :=
       fun n => ⟨n, n.zero_add.symm⟩
 
-    @[reducible] def pos (n : ℕ) : Prop := lt zero n
+    @[reducible] def pos (n : ℕ) : Prop := zero < n
 
     theorem pos_iff_neq_zero : ∀(n : ℕ), n.pos ↔ n ≠ zero :=
       fun n => Iff.intro
-        (fun h => (And.right h).symm)
-        (fun h => And.intro n.zero_le h.symm)
+        (fun h => (ne_of_lt h).symm)
+        (fun h => lt_of_le_ne n.zero_le h.symm)
 
-    theorem le_succ : ∀ (n : ℕ), n.le n.succ :=
+    theorem le_succ : ∀ (n : ℕ), n ≤ n.succ :=
       fun n => ⟨one, n.add_one_eq_succ.symm⟩
 
-    theorem lt_succ : ∀ (n : ℕ), n.lt n.succ :=
-      fun n => ⟨n.le_succ, n.succ_ne_self.symm⟩
+    theorem lt_succ : ∀ (n : ℕ), n < n.succ :=
+      fun n => lt_of_le_ne n.le_succ n.succ_ne_self.symm
 
-    theorem le_succ_le {n m : ℕ} : n.le m → n.le m.succ :=
+    theorem le_succ_le {n m : ℕ} : n ≤ m → n ≤ m.succ :=
       fun ⟨x, hx⟩ => ⟨x.succ, hx.substr (n.add_succ x).symm⟩
 
-    theorem lt_succ_le {n m : ℕ} : n.le m → n.lt m.succ :=
-      fun ⟨x, hx⟩ => ⟨le_succ_le ⟨x, hx⟩, fun he => (succ_ne_zero (add_right_eq_self_is_zero ((n.add_succ x).substr (hx.subst (motive := (·.succ = n)) he.symm)))).elim⟩
+    theorem lt_succ_le {n m : ℕ} : n ≤ m → n < m.succ :=
+      fun ⟨x, hx⟩ => lt_of_le_ne (le_succ_le ⟨x, hx⟩) fun he => (succ_ne_zero (add_right_eq_self_is_zero ((n.add_succ x).substr (hx.subst (motive := (·.succ = n)) he.symm)))).elim
 
-    theorem lt_succ_lt {n m : ℕ} : n.lt m → n.lt m.succ :=
+    theorem lt_succ_lt {n m : ℕ} : n< m → n < m.succ :=
       fun h => lt_succ_le (le_of_lt h)
 
-    theorem lt_or_eq_or_gt : ∀ (n m : ℕ), n.lt m ∨ n = m ∨ n.gt m :=
-      by
-        intro n
-        apply ind
-        case h0 => exact Or.inr (eq_or_gt_of_ge n.zero_le)
-        case h_ind =>
-          intro m hor
-          cases hor
-          case inl h =>
-            exact Or.inl (lt_succ_lt h)
-          case inr h =>
-            cases h
-            case inl h =>
-              exact h.substr (Or.inl (lt_succ m))
-            case inr h =>
-              apply Or.inr
-              have ⟨⟨x, hx⟩, ne0⟩ := h
-              cases x.zero_or_is_succ
-              case inl x0 => rw [x0, add_zero] at hx; exact absurd hx.symm ne0
-              case inr xn0 =>
-                have ⟨x', hx'⟩ := xn0
-                refine' eq_or_gt_of_ge ⟨x', _⟩
-                rw [hx, hx', add_succ, succ_add]
-
-    theorem le_or_ge : ∀ (n m : ℕ), n.le m ∨ n.ge m :=
-      fun n m => (lt_or_eq_or_gt n m).elim (fun h => Or.inl (le_of_lt h)) (fun h => Or.inr (h.elim (le_of_eq ·.symm) (le_of_lt ·)))
-
-    theorem le_or_gt : ∀ (n m : ℕ), n.le m ∨ n.gt m :=
-      fun n m => (lt_or_eq_or_gt n m).elim (fun h => Or.inl (le_of_lt h)) (Or.elim · (fun h => Or.inl (le_of_eq h)) Or.inr)
-
-    theorem lt_or_ge : ∀ (n m : ℕ), n.lt m ∨ n.ge m :=
-      fun n m => (lt_or_eq_or_gt n m).elim Or.inl (fun h => Or.inr (h.elim (le_of_eq ·.symm) (le_of_lt ·)))
-
-    theorem not_le_of_lt {a b : ℕ} : a.lt b → ¬(b.le a) :=
-      by
-      intro h ⟨x, hx⟩
-      have ⟨x', hx'⟩ := le_of_lt h
-      rw [hx', add_assoc] at hx
-      rw [eq_zero_of_add_eq_zero_left (add_right_eq_self_is_zero hx.symm), add_zero] at hx'
-      exact h.right hx'.symm
-
-    theorem not_lt_of_le {a b : ℕ} : a.le b → ¬(b.lt a) :=
-      imp_not_comm.mp not_le_of_lt
-
-    theorem lt_of_not_le {a b : ℕ} : ¬(a.le b) → b.lt a :=
-      ((le_or_gt a b).resolve_left ·)
-
-    theorem le_of_not_lt {a b : ℕ} : ¬(a.lt b) → b.le a :=
-      ((lt_or_ge a b).resolve_left ·)
-
-    theorem le_of_not_le {a b : ℕ} : ¬(a.le b) → b.le a :=
-      ((le_or_ge a b).resolve_left ·)
-
     theorem pos_is_succ {n : ℕ} : pos n → ∃ (m : ℕ), n = m.succ :=
-      fun h => n.zero_or_is_succ.resolve_left (h.right ·.symm)
+      fun h => n.zero_or_is_succ.resolve_left (ne_of_lt h ·.symm)
 
-    theorem le_add (n m : ℕ) : n.le (n.add m) :=
+    theorem le_add (n m : ℕ) : n ≤ (n + m) :=
       ⟨m, Eq.symm rfl⟩
 
-    theorem le_add_right {a b : ℕ} : ∀ (c : ℕ), a.le b → a.le (b.add c) :=
-      fun c ⟨x, hx⟩ => ⟨x.add c, hx.substr (add_assoc _ _ _)⟩
+    theorem le_add_right {a b : ℕ} : ∀ (c : ℕ), a ≤ b → a ≤ (b + c) :=
+      fun c ⟨x, hx⟩ => ⟨x + c, hx.substr (add_assoc _ _ _)⟩
 
-    theorem le_add_left {a b : ℕ} : ∀ (c : ℕ), a.le b → a.le (c.add b) :=
+    theorem le_add_left {a b : ℕ} : ∀ (c : ℕ), a ≤ b → a ≤ (c + b) :=
       fun c h => (add_comm _ _).substr (le_add_right c h)
 
-    theorem add_le_self_is_zero {a b : ℕ} : (a.add b).le a → b = zero :=
+    theorem add_le_self_is_zero {a b : ℕ} : (a + b) ≤ a → b = zero :=
       fun ⟨x, hx⟩ => eq_zero_of_add_eq_zero_left (add_right_eq_self_is_zero ((a.add_assoc b x).subst hx).symm)
 
-    theorem lt_add_right {a b : ℕ} : ∀ (c : ℕ), a.lt b → a.lt (b.add c) := by
+    theorem lt_add_right {a b : ℕ} : ∀ (c : ℕ), a < b → a < (b + c) := by
       intro c h;
-      refine' And.intro (le_add_right _ (le_of_lt h)) _
+      refine' lt_of_le_ne (le_add_right _ (le_of_lt h)) _
       intro h'
       have ⟨x, hx⟩ := le_of_lt h
       rw [hx, add_assoc] at h'
@@ -353,43 +345,104 @@ namespace ℕ
       rw [hx] at h
       exact not_lt_self a h
 
-    theorem lt_add_left {a b : ℕ} : ∀ (c : ℕ), a.lt b → a.lt (c.add b) :=
+    theorem lt_add_left {a b : ℕ} : ∀ (c : ℕ), a < b → a < (c + b) :=
       fun c h => (add_comm c b).substr (lt_add_right c h)
 
-    theorem pos_add_neq_self {n : ℕ} : pos n → ∀ (m : ℕ), n.add m ≠ m :=
+    theorem pos_add_neq_self {n : ℕ} : pos n → ∀ (m : ℕ), n + m ≠ m :=
       fun h _ h' => succ_ne_zero ((add_left_eq_self_is_zero h').subst (pos_is_succ h).choose_spec.symm)
 
-    theorem add_pos_neq_self {n : ℕ} : pos n → ∀ (m : ℕ), m.add n ≠ m :=
+    theorem add_pos_neq_self {n : ℕ} : pos n → ∀ (m : ℕ), m + n ≠ m :=
       fun h _ h' => succ_ne_zero ((add_right_eq_self_is_zero h').subst (pos_is_succ h).choose_spec.symm)
 
-    theorem add_le_add_iff_left {a b c : ℕ} : (a.add b).le (a.add c) ↔ b.le c := by
-      unfold le
+
+    theorem add_le_add_iff_left {a b c : ℕ} : (a + b) ≤ (a + c) ↔ b ≤ c := by
       apply Iff.intro
       <;> intro ⟨x, h⟩
       <;> exists x
       <;> apply (add_right_inj a).mp
       <;> rw [h, add_assoc]
 
-    theorem add_le_add_iff_right {a b c : ℕ} : (a.add c).le (b.add c) ↔ a.le b := by
+    theorem add_le_add_of_le_left (a : ℕ) {b c : ℕ} : b ≤ c → (a + b) ≤ (a + c) :=
+      add_le_add_iff_left.mpr
+
+    theorem le_of_add_le_add_left {a b c : ℕ} :  (a + b) ≤ (a + c) → b ≤ c :=
+      add_le_add_iff_left.mp
+
+    theorem add_le_add_iff_right {a b c : ℕ} : (a + c) ≤ (b + c) ↔ a ≤ b := by
       rw [add_comm, add_comm b, add_le_add_iff_left]
 
-  -- #check Nat.lt_or
-    -- theorem
+    theorem add_le_add_of_le_right {a b : ℕ} (c : ℕ) : a ≤ b → (a + c) ≤ (b + c) :=
+      add_le_add_iff_right.mpr
+
+    theorem le_of_add_le_add_right {a b c : ℕ} :  (a + c) ≤ (b + c) → a ≤ b :=
+      add_le_add_iff_right.mp
+
+
+    @[default_instance] instance : OrderedMonoid ℕ where
+      add_le_add_left := fun h c => add_le_add_of_le_left c h
+      add_le_add_right := fun h c => add_le_add_of_le_right c h
+
+    @[default_instance] instance : OrderedCommMonoid ℕ where
+
+    theorem add_le_le_le {a b c d : ℕ} : (a ≤ b) → (c ≤ d) → (a + c) ≤ (b + d) :=
+      fun h1 h2 => le_trans _ _ _ ((add_le_add_iff_right (c := c)).mpr h1) ((add_le_add_iff_left (a := b)).mpr h2)
+
+    theorem zero_le_one : zero ≤ one := zero.le_succ
+
+    theorem zero_lt_one : zero < one := zero.lt_succ
+
+    theorem mul_le_mul_of_le_left {b c : ℕ} (a : ℕ) : b ≤ c → (a * b) ≤ (a * c) := by
+      intro ⟨x, h⟩
+      exists a * x
+      rw [h, mul_add]
+
+    theorem mul_le_mul_of_le_right {a b : ℕ} (c : ℕ) : a ≤ b → (a * c) ≤ (b * c) := by
+      intro ⟨x, h⟩
+      exists x * c
+      rw [h, add_mul]
+
+    theorem le_of_mul_le_mul_left {a b c : ℕ} (h0 : a ≠ zero): (a * b) ≤ (a * c) → b ≤ c := by
+      intro ⟨x, h⟩
+      cases le_or_ge b c
+      assumption
+      case inr h' =>
+        have ⟨x', hx'⟩ := h'
+        rw [hx', mul_add, add_assoc] at h
+        replace h := eq_zero_of_add_eq_zero_left (add_right_eq_self_is_zero h.symm)
+        replace h := (mul_eq_zero h).resolve_left h0
+        rw [hx', h, add_zero]
+        exact le_refl _
+
+    theorem le_of_mul_le_mul_right {a b c : ℕ} (h0 : c ≠ zero): (a * c) ≤ (b * c) → a ≤ b := by
+      intro h
+      apply le_of_mul_le_mul_left h0
+      simp only [mul_comm c, h]
+
+    theorem mul_le_mul_iff_left {a b c : ℕ} (h0 : a ≠ zero) : (a * b) ≤ (a * c) ↔ b ≤ c :=
+      Iff.intro (le_of_mul_le_mul_left h0) (mul_le_mul_of_le_left a)
+
+    theorem mul_le_mul_iff_right {a b c : ℕ} (h0 : c ≠ zero) : (a * c) ≤ (b * c) ↔ a ≤ b :=
+      Iff.intro (le_of_mul_le_mul_right h0) (mul_le_mul_of_le_right c)
+
+    theorem mul_le_le_le {a b c d : ℕ} : (a ≤ b) → (c ≤ d) → (a * c) ≤ (b * d) :=
+      fun h1 h2 => le_trans _ _ _ (mul_le_mul_of_le_right c h1) (mul_le_mul_of_le_left b h2)
+
+
+
 
     section num
 
       -- theorem
 
     end num
-    -- def ge
 
   end comp
 
-    theorem mul_left_inj {a b c : ℕ} (hc : c ≠ zero): a.mul c = b.mul c ↔ a = b := by
+    theorem mul_left_inj {a b c : ℕ} (hc : c ≠ zero): a * c = b * c ↔ a = b := by
       apply Iff.intro
       case mp =>
         intro h
-        have p1 (a b c : ℕ) (hc : c ≠ zero) (hl : a.le b) : a.mul c = b.mul c → a = b := by
+        have p1 (a b c : ℕ) (hc : c ≠ zero) (hl : a ≤ b) : a * c = b * c → a = b := by
           have ⟨x, hx⟩ := hl
           rw [hx, add_mul]
           intro h
@@ -401,7 +454,7 @@ namespace ℕ
       case mpr =>
         intro h;simp only [h]
 
-    theorem mul_right_inj {a b c : ℕ} (hc : c ≠ zero) : c.mul a = c.mul b ↔ a = b := by
+    theorem mul_right_inj {a b c : ℕ} (hc : c ≠ zero) : c * a = c * b ↔ a = b := by
       simp only [c.mul_comm]
       exact mul_left_inj hc
 

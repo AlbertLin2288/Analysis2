@@ -1,13 +1,15 @@
 import Analysis2.Operator
 import Analysis2.Structure
 import Analysis2.Comp
+import Analysis2.CompStructure
 import Analysis2.EquivalentClass
 import Analysis2.Nat
 
 noncomputable section
 namespace my
 open Classical
-open Monoid CommMonoid CommGroup SemiRing CommSemiRing
+open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing
+open OrderedMonoid OrderedCommMonoid OrderedCommGroup OrderedSemiRing OrderedCommSemiRing OrderedCommRing
 open Comp
 open Zero One
 
@@ -119,7 +121,7 @@ namespace ℤ
       intro h
       replace h := EC.sound_inv eqv.eqv h
       unfold eqv zero_repr one_repr at h
-      simp only [ℕ.zero_add] at h
+      simp only [zero_add] at h
       exact ℕ.zero_ne_one h
 
 
@@ -193,9 +195,6 @@ namespace ℤ
       unfold add_fn_fn add_fn_fn_fn
       rw [np.fst.add_comm, np.snd.add_comm]
 
-    theorem _zero_add : ∀(n : ℤ), zero + n = n :=
-      fun n => Eq.substr (_add_comm zero n) n._add_zero
-
     theorem _add_assoc : ∀ (a b c : ℤ), (a + b) + c = a + (b + c) := by
       intro a b c
       repeat rw [add_def]
@@ -217,52 +216,12 @@ namespace ℤ
       unfold abp bcp add_fn_fn_fn
       rw [add_assoc, add_assoc]
 
-    @[default_instance] instance ℤ_Monoid : Monoid ℤ where
-      add_zero := _add_zero
-      zero_add := _zero_add
-      add_assoc := _add_assoc
-
     -- theorem zero_def : Monoid.zero = zero := rfl
 
     @[default_instance] instance ℤ_CommMonoid : CommMonoid ℤ where
+      _add_zero := _add_zero
+      _add_assoc := _add_assoc
       add_comm := _add_comm
-
-
-    -- instance : Std.Associative (α := ℤ) add := ⟨add_assoc⟩
-    -- instance : Std.Commutative (α := ℤ) add := ⟨add_comm⟩
-
-    -- theorem add_right_comm : ∀ (a b c : ℤ), (a + b) + c = (a + c) + b := by
-    --   intros _ b _
-    --   repeat rw [add_assoc]
-    --   rw [add_comm b]
-
-    -- theorem add_left_comm : ∀ (a b c : ℤ), a + (b + c) = b + (a + c) := by
-    --   intros
-    --   ac_nf
-
-    theorem add_left_inj {a b : ℤ} : ∀ (c : ℤ), a + c = b + c ↔ a = b := by
-      intro c
-      apply Iff.intro
-      case mp =>
-        intro h
-        apply EC.sound' eqv.eqv a.sys_of_repr_spec b.sys_of_repr_spec
-        replace h := EC.sound_inv eqv.eqv h
-        unfold eqv add_fn_fn_fn at *
-        simp only [] at *
-        rw (occs := .pos [1]) [add_right_comm] at h
-        rw (occs := .pos [2]) [add_right_comm] at h
-        simp only [←add_assoc] at h
-        rw (occs := .pos [3]) [add_right_comm] at h
-        simp only [ℕ.add_left_inj] at h
-        assumption
-      case mpr =>
-        intro h;simp only [h]
-
-    theorem add_right_inj {a b : ℤ} : ∀ (c : ℤ), c + a = c + b ↔ a = b := by
-      intro c
-      simp only [add_comm]
-      exact add_left_inj c
-
 
   end add
 
@@ -376,7 +335,7 @@ namespace ℤ
       rw [EquivalentClass.lift_spec n np n.sys_of_repr_spec]
       rw [EquivalentClass.lift_spec _ one_repr one_is_member_one]
       unfold mul_fn_fn mul_fn_fn_fn one_repr
-      simp only [ℕ.mul_zero, ℕ.add_zero, ℕ.mul_one, ℕ.zero_add]
+      simp only [ℕ.mul_zero, ℕ.add_zero, ℕ.mul_one, zero_add]
       exact (EquivalentClass.from_sys_of_repr _).symm
 
     theorem _mul_comm : ∀(n m : ℤ), n * m = m * n := by
@@ -395,12 +354,6 @@ namespace ℤ
         np.snd.mul_comm, np.snd.mul_comm,
         (mp.snd * np.fst).add_comm
       ]
-
-    theorem _zero_mul : ∀(n : ℤ), zero * n = zero :=
-      fun n => Eq.substr (_mul_comm zero n) n._mul_zero
-
-    theorem _one_mul : ∀(n : ℤ), one * n = n :=
-      fun n => Eq.substr (_mul_comm one n) n._mul_one
 
     theorem _mul_assoc : ∀ (a b c : ℤ), (a * b) * c = a * (b * c) := by
       intro a b c
@@ -453,28 +406,15 @@ namespace ℤ
       intro a b c
       simp only [_mul_comm _ c, _mul_add]
 
-    @[default_instance] instance t : SemiRing ℤ where
-      mul_one := _mul_one
-      one_mul := _one_mul
-      mul_assoc := _mul_assoc
-      mul_zero := _mul_zero
-      zero_mul := _zero_mul
-      mul_add := _mul_add
-      add_mul := _add_mul
-
-
     @[default_instance] instance : CommSemiRing ℤ where
+      _mul_one := _mul_one
+      _mul_assoc := _mul_assoc
+      _mul_zero := _mul_zero
+      _add_mul := _add_mul
+      _zero_ne_one := zero_ne_one
       mul_comm := _mul_comm
 
     @[default_instance] instance : CommRing ℤ where
-
-    theorem mul_right_comm : ∀ (a b c : ℤ), (a * b) * c = (a * c) * b := by
-      intros
-      ac_nf
-
-    theorem mul_left_comm : ∀ (a b c : ℤ), a * (b * c) = b * (a * c) := by
-      intros
-      ac_nf
 
     theorem mul_left_inj {a b c : ℤ} (ha : c ≠ zero) : a * c = b * c ↔ a = b := by
       apply Iff.intro
@@ -533,13 +473,6 @@ namespace ℤ
       by_cases ha0 : a = zero
       case pos => exact Or.inl ha0
       case neg =>
-        -- replace h : a * b = Monoid.zero := h
-        -- guard_hyp h : a * b = Monoid.zero
-        -- guard_hyp h :~ a * b = Monoid.zero
-        -- guard_hyp h :ₛ a * b = Monoid.zero
-        -- guard_hyp h :ₐ a * b = Monoid.zero
-        -- with_unfolding_all guard_expr zero =ₛ Monoid.zero
-        with_unfolding_all guard_expr a+b =~ a.add b
         rw [← mul_zero a, mul_right_inj ha0] at h
         exact Or.inr h
 
@@ -612,14 +545,14 @@ namespace ℤ
     def le : ℤ → ℤ → Prop :=
       EC.lift eqv.eqv le_fn le_respect
 
-    theorem le_refl : ∀ (a : ℤ), a.le a := by
+    theorem _le_refl : ∀ (a : ℤ), a.le a := by
       intro
       unfold le le_fn le_fn_fn eqv
       simp [EC.lift_spec _ _ (EC.sys_of_repr_spec _)] at *
       rw [add_comm]
       exact le_self _
 
-    theorem le_trans : ∀(a b c : ℤ), a.le b → b.le c → a.le c := by
+    theorem _le_trans : ∀(a b c : ℤ), a.le b → b.le c → a.le c := by
       intro a b c
       let bp := b.sys_of_repr
       unfold le le_fn le_fn_fn eqv
@@ -634,7 +567,7 @@ namespace ℤ
       repeat rw [add_left_comm _ bp.snd] at h3
       exact ℕ.add_le_add_iff_left.mp (ℕ.add_le_add_iff_left.mp h3)
 
-    theorem le_antisymm : ∀(a b : ℤ), a.le b → b.le a → a = b := by
+    theorem _le_antisymm : ∀(a b : ℤ), a.le b → b.le a → a = b := by
       intro a b hx hx'
       apply EC.sound' eqv.eqv a.sys_of_repr_spec b.sys_of_repr_spec
       unfold le EC.lift le_fn EC.lift le_fn_fn eqv at *
@@ -642,46 +575,51 @@ namespace ℤ
       ac_nf at *
       exact Comp.le_antisymm _ _ hx hx'
 
-    theorem le_total : ∀(a b : ℤ), a.le b ∨ b.le a := by
+    theorem _le_total : ∀(a b : ℤ), a.le b ∨ b.le a := by
       intro a b
       unfold le EC.lift le_fn EC.lift le_fn_fn eqv at *
       ac_nf
       exact Comp.le_total _ _
 
     @[default_instance] instance : Comp ℤ :=
-      {le, le_refl, le_trans, le_antisymm, le_total}
+      ⟨le, _le_refl, _le_trans, _le_antisymm, _le_total⟩
 
     theorem le_def {a b : ℤ} : (a ≤ b) = a.le b := rfl
 
-    @[reducible] def pos (n : ℤ) : Prop := zero < n
+    theorem _add_le_add_left {a b : ℤ} : ∀(c : ℤ), a ≤ b → c + a ≤ c + b := by
+      intro c h
+      let ap := a.sys_of_repr
+      let bp := b.sys_of_repr
+      let cp := c.sys_of_repr
+      let cap := add_fn_fn_fn cp ap
+      let cbp := add_fn_fn_fn cp bp
+      repeat first | rw [le_def] at * | rw [add_def] at *
+      unfold le le_fn add add_fn add_fn_fn at *
+      repeat first
+      | rw [EC.lift_spec _ ap a.sys_of_repr_spec]
+      | rw [EC.lift_spec _ bp b.sys_of_repr_spec]
+      | rw [EC.lift_spec _ cp c.sys_of_repr_spec]
+      | rw [EC.lift_spec _ cap (EC.is_member_of_from_elm _ eqv.eqv)]
+      | rw [EC.lift_spec _ cbp (EC.is_member_of_from_elm _ eqv.eqv)]
+      unfold le_fn_fn cap cbp add_fn_fn_fn eqv EC.lift at *
+      simp only [add_assoc, ←add_left_comm cp.fst]
+      simp only [← add_left_comm cp.snd, ℕ.add_le_add_iff_left]
+      ac_nf at *
 
-    @[reducible] def nonneg (n : ℤ) : Prop := zero ≤ n
+    @[default_instance] instance : OrderedCommMonoid ℤ where
+      _add_le_add_left := _add_le_add_left
 
-    theorem zero_le_one : zero ≤ one := by
+    @[default_instance] instance : OrderedCommGroup ℤ where
+
+    theorem _zero_le_one : zero ≤ one := by
       repeat rw [le_def]
       unfold le le_fn le_fn_fn eqv
       simp only [
         EC.lift_spec _ zero_repr zero_is_member_zero,
         EC.lift_spec _ one_repr one_is_member_one,
-        zero_repr, one_repr, ℕ.zero_add, ℕ.zero_le_one]
+        zero_repr, one_repr, zero_add, ℕ.zero_le_one]
 
-    theorem zero_lt_one : zero < one := by
-      -- simp only [EC.lift_spec zero zero_repr zero_is_member_zero]
-      refine' lt_of_le_ne zero_le_one zero_ne_one
-
-
-      -- unfold le
-
-    theorem le_total' : ∀(a b : ℤ), a ≤ b ∨ b ≤ a := by
-      intro a b
-      repeat rw [le_def]
-      unfold le EC.lift le_fn EC.lift le_fn_fn eqv at *
-      ac_nf
-      exact Comp.le_total _ _
-
-    -- theorem le_iff_add_nonneg
-
-    theorem mul_nonneg {a b : ℤ} : a.nonneg → b.nonneg → (a * b).nonneg := by
+    theorem _mul_nonneg {a b : ℤ} : a ≥ zero → b ≥ zero → (a * b) ≥ zero := by
       simp only [le_def]
       repeat rw [mul_def]
       unfold le le_fn le_fn_fn mul mul_fn mul_fn_fn
@@ -693,18 +631,18 @@ namespace ℤ
         EC.lift_spec _ zero_repr zero_is_member_zero,
         EC.lift_spec a ap a.sys_of_repr_spec,
         EC.lift_spec b bp b.sys_of_repr_spec,
-        -- EC.lift_spec _ abp (EC.is_member_of_from_elm abp _)
       ]
       rw [EC.lift_spec _ abp (EC.is_member_of_from_elm abp _)]
       unfold zero_repr abp mul_fn_fn_fn
-      simp only [ℕ.zero_add] at *
+      simp only [zero_add] at *
       intro ⟨x, hx⟩ ⟨x', hx'⟩
       simp only [hx, hx', add_mul, mul_add]
       exists x * x'
       ac_nf
 
-    theorem mul_le_mul_of_nonneg_left {a b c : ℤ} : a ≤ b → c.nonneg → c * a ≤ c * b := by
-      sorry
+    @[default_instance] instance : OrderedCommRing ℤ where
+      mul_nonneg := _mul_nonneg
+      _zero_le_one := _zero_le_one
 
     section nums
 

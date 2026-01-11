@@ -8,6 +8,7 @@ open Classical
 open Comp
 open Zero One
 open Monoid CommMonoid SemiRing CommSemiRing
+open OrderedMonoid OrderedCommMonoid OrderedSemiRing OrderedCommSemiRing
 
 axiom ℕ : Type
 
@@ -90,7 +91,7 @@ namespace ℕ
     theorem add_succ : ∀(n m : ℕ), n + m.succ = (n + m).succ :=
       fun _ m => (ind_spec _ _).right m
 
-    theorem zero_add : ∀(n : ℕ), zero + n = n :=
+    theorem _zero_add : ∀(n : ℕ), zero + n = n :=
       ind zero.add_zero (fun m (hm : zero + m = m) => Eq.subst (motive := (zero + m.succ = succ .)) hm (add_succ zero m))
 
     theorem succ_add : ∀(n m : ℕ), n.succ + m = (n + m).succ := by
@@ -103,7 +104,7 @@ namespace ℕ
     theorem add_comm : ∀(n m : ℕ), n + m = m + n := by
       intro n
       apply ind
-      case h0 => simp only [add_zero,zero_add]
+      case h0 => simp only [add_zero, _zero_add]
       case h_ind =>
         intro m hm
         simp only [add_succ, succ_add, hm]
@@ -116,25 +117,10 @@ namespace ℕ
         intro c hc
         simp only [add_succ, hc]
 
-    -- instance : Std.Associative (α := ℕ) add := ⟨add_assoc⟩
-    -- instance : Std.Commutative (α := ℕ) add := ⟨add_comm⟩
-
-    instance : Monoid ℕ where
-      add_zero := add_zero
-      zero_add := zero_add
-      add_assoc := add_assoc
-
     instance : CommMonoid ℕ where
+      _add_zero := add_zero
+      _add_assoc := add_assoc
       add_comm := add_comm
-
-
-    -- theorem add_right_comm : ∀ (a b c : ℕ), (a + b) + c = (a + c) + b := by
-    --   intros
-    --   ac_nf
-
-    -- theorem add_left_comm : ∀ (a b c : ℕ), a + (b + c) = b + (a + c) := by
-    --   intros
-    --   ac_nf
 
     theorem add_left_inj {a b : ℕ} : ∀ (c : ℕ), a + c = b + c ↔ a = b := by
       intro c
@@ -160,7 +146,7 @@ namespace ℕ
       fun h => eq_zero_of_add_eq_zero_left (h.subst (a.add_comm b).symm)
 
     theorem add_right_eq_self_is_zero {a b : ℕ} : a + b = a → b = zero :=
-      ind (h := fun a' => a' + b = a' → b = zero) (fun h => h.subst b.zero_add.symm) (fun a' h h' => h (succ_inj _ a' (h'.subst (a'.succ_add _).symm))) a
+      ind (h := fun a' => a' + b = a' → b = zero) (fun h => h.subst (zero_add b).symm) (fun a' h h' => h (succ_inj _ a' (h'.subst (a'.succ_add _).symm))) a
 
     theorem add_left_eq_self_is_zero {a b : ℕ} : a + b = b → a = zero :=
       (add_comm _ _).substr add_right_eq_self_is_zero
@@ -192,7 +178,7 @@ namespace ℕ
       intro n
       rw [one_eq_succ_zero, mul_succ, mul_zero, zero_add]
 
-    theorem zero_mul : ∀(n : ℕ), zero * n = zero :=
+    theorem _zero_mul : ∀(n : ℕ), zero * n = zero :=
       ind (ℕ.mul_zero zero) fun n hn => Eq.substr (ℕ.mul_succ zero n) (Eq.substr (zero * n).add_zero hn)
 
     theorem succ_mul : ∀(n m : ℕ), n.succ * m = (n * m) + m := by
@@ -203,14 +189,10 @@ namespace ℕ
         intro m hm
         simp only [mul_succ, hm, add_succ, add_right_comm]
 
-    theorem one_mul : ∀(n : ℕ), one * n = n := by
-      intro n
-      rw [one_eq_succ_zero, succ_mul, zero_mul, zero_add]
-
     theorem mul_comm : ∀(n m : ℕ), n * m = m * n := by
       intro n
       apply ind
-      case h0 => simp only [mul_zero,zero_mul]
+      case h0 => simp only [mul_zero,_zero_mul]
       case h_ind =>
         intro m hm
         simp only [mul_succ, succ_mul, hm]
@@ -228,7 +210,7 @@ namespace ℕ
           add_right_comm (a * c)
         ]
 
-    theorem mul_add : ∀(a b c : ℕ), a * (b + c) = (a * b) + (a * c) := by
+    theorem _mul_add : ∀(a b c : ℕ), a * (b + c) = (a * b) + (a * c) := by
       intro a _ _
       rw [mul_comm, add_mul, mul_comm a, mul_comm a]
 
@@ -238,18 +220,14 @@ namespace ℕ
       case h0 => simp only [mul_zero]
       case h_ind =>
         intro c hc
-        simp only [mul_succ, hc, mul_add]
-
-    instance : SemiRing ℕ where
-      mul_one := mul_one
-      one_mul := one_mul
-      mul_assoc := mul_assoc
-      mul_zero := mul_zero
-      zero_mul := zero_mul
-      mul_add := mul_add
-      add_mul := add_mul
+        simp only [mul_succ, hc, _mul_add]
 
     instance : CommSemiRing ℕ where
+      _mul_one := mul_one
+      _mul_assoc := mul_assoc
+      _mul_zero := mul_zero
+      _add_mul := add_mul
+      _zero_ne_one := zero_ne_one
       mul_comm := mul_comm
 
     theorem mul_eq_zero {a b : ℕ} : a * b = zero → a = zero ∨ b = zero :=
@@ -296,7 +274,7 @@ namespace ℕ
       {le, le_refl, le_trans, le_antisymm, le_total}
 
     theorem zero_le : ∀(n : ℕ), zero ≤ n :=
-      fun n => ⟨n, n.zero_add.symm⟩
+      fun n => ⟨n, (zero_add n).symm⟩
 
     @[reducible] def pos (n : ℕ) : Prop := zero < n
 
@@ -371,18 +349,12 @@ namespace ℕ
     theorem add_le_add_iff_right {a b c : ℕ} : (a + c) ≤ (b + c) ↔ a ≤ b := by
       rw [add_comm, add_comm b, add_le_add_iff_left]
 
-    theorem add_le_add_of_le_right {a b : ℕ} (c : ℕ) : a ≤ b → (a + c) ≤ (b + c) :=
-      add_le_add_iff_right.mpr
 
     theorem le_of_add_le_add_right {a b c : ℕ} :  (a + c) ≤ (b + c) → a ≤ b :=
       add_le_add_iff_right.mp
 
-
-    @[default_instance] instance : OrderedMonoid ℕ where
-      add_le_add_left := fun h c => add_le_add_of_le_left c h
-      add_le_add_right := fun h c => add_le_add_of_le_right c h
-
     @[default_instance] instance : OrderedCommMonoid ℕ where
+      _add_le_add_left := (@add_le_add_of_le_left · _ _)
 
     theorem add_le_le_le {a b c d : ℕ} : (a ≤ b) → (c ≤ d) → (a + c) ≤ (b + d) :=
       fun h1 h2 => le_trans _ _ _ ((add_le_add_iff_right (c := c)).mpr h1) ((add_le_add_iff_left (a := b)).mpr h2)
@@ -432,8 +404,6 @@ namespace ℕ
 
     section num
 
-      -- theorem
-
     end num
 
   end comp
@@ -460,4 +430,3 @@ namespace ℕ
 
 end ℕ
 end my
--- noncomputable

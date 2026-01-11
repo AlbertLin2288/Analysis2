@@ -1,4 +1,7 @@
+import Analysis2.Operator
 import Analysis2.Comp
+import Analysis2.Structure
+import Analysis2.CompStructure
 import Analysis2.EquivalentClass
 import Analysis2.Nat
 import Analysis2.Int
@@ -8,6 +11,7 @@ namespace my
 open Classical
 open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommGroup
 open Comp
+open OrderedMonoid OrderedCommMonoid OrderedCommGroup OrderedSemiRing OrderedCommSemiRing OrderedCommGroup
 open Zero One
 
 open my renaming EquivalentClass → EC
@@ -20,7 +24,7 @@ structure ℤ_pair where
 structure ℚ_con where
   fst : ℤ
   snd : ℤ
-  h : snd.pos
+  h : snd > zero
 
 
 def ℚ.eqv : ℚ_con → ℚ_con → Prop :=
@@ -52,7 +56,7 @@ namespace ℚ.eqv
       simp only [mul_assoc, ←h2] at h1
       replace h1 := congrArg (· * c2) h1--(ℤ.mul_left_inj (b2.mul c1)).mpr h1
       simp only [ℤ.mul_left_inj (ne_of_lt hc).symm] at h1
-      simp only [ℤ.mul_left_comm _ b1, ℤ.mul_right_inj hb0] at h1
+      simp only [mul_left_comm _ b1, ℤ.mul_right_inj hb0] at h1
       exact h1
 
   def eqv : Equivalence ℚ.eqv where
@@ -70,30 +74,30 @@ namespace ℚ
 
   section nums
 
-    def zero_repr : ℚ_con := ⟨zero, one, ℤ.zero_lt_one⟩
+    def zero_repr : ℚ_con := ⟨zero, one, zero_lt_one⟩
     def _zero : ℚ := mk' zero_repr
     @[default_instance] instance : Zero ℚ := ⟨_zero⟩
     theorem zero_is_member_zero : zero.is_member zero_repr := EC.is_member_of_from_elm _ eqv.eqv
 
 
-    def one_repr : ℚ_con := ⟨one, one, ℤ.zero_lt_one⟩
+    def one_repr : ℚ_con := ⟨one, one, zero_lt_one⟩
     def _one : ℚ := mk' one_repr
     @[default_instance] instance : One ℚ := ⟨_one⟩
     theorem one_is_member_one : one.is_member one_repr := EC.is_member_of_from_elm _ eqv.eqv
-    def two_repr : ℚ_con := ⟨ℤ.two, one, ℤ.zero_lt_one⟩
+    def two_repr : ℚ_con := ⟨ℤ.two, one, zero_lt_one⟩
     def two : ℚ := mk' two_repr
     theorem two_is_member_two : two.is_member two_repr := EC.is_member_of_from_elm _ eqv.eqv
-    def three_repr : ℚ_con := ⟨ℤ.three, one, ℤ.zero_lt_one⟩
+    def three_repr : ℚ_con := ⟨ℤ.three, one, zero_lt_one⟩
     def three : ℚ := mk' three_repr
     theorem three_is_member_three : three.is_member three_repr := EC.is_member_of_from_elm _ eqv.eqv
 
-    def neg_one_repr : ℚ_con := ⟨ℤ.neg_one, one, ℤ.zero_lt_one⟩
+    def neg_one_repr : ℚ_con := ⟨ℤ.neg_one, one, zero_lt_one⟩
     def neg_one : ℚ := mk' neg_one_repr
     theorem neg_one_is_member_neg_one : neg_one.is_member neg_one_repr := EC.is_member_of_from_elm _ eqv.eqv
-    def neg_two_repr : ℚ_con := ⟨ℤ.neg_two, one, ℤ.zero_lt_one⟩
+    def neg_two_repr : ℚ_con := ⟨ℤ.neg_two, one, zero_lt_one⟩
     def neg_two : ℚ := mk' neg_two_repr
     theorem neg_two_is_member_neg_two : neg_two.is_member neg_two_repr := EC.is_member_of_from_elm _ eqv.eqv
-    def neg_three_repr : ℚ_con := ⟨ℤ.neg_three, one, ℤ.zero_lt_one⟩
+    def neg_three_repr : ℚ_con := ⟨ℤ.neg_three, one, zero_lt_one⟩
     def neg_three : ℚ := mk' neg_three_repr
     theorem neg_three_is_member_neg_three : neg_three.is_member neg_three_repr := EC.is_member_of_from_elm _ eqv.eqv
 
@@ -160,13 +164,9 @@ namespace ℚ
       simp only [
         EC.lift_spec n np n.sys_of_repr_spec,
         EC.lift_spec m mp m.sys_of_repr_spec]
-      -- rw [EquivalentClass.lift_spec m mp m.sys_of_repr_spec]
-      -- rw [EquivalentClass.lift_spec n np n.sys_of_repr_spec]
       unfold add_fn_fn add_fn_fn_fn
       ac_nf
 
-    theorem _zero_add : ∀(n : ℚ), zero + n = n :=
-      fun n => Eq.substr (_add_comm zero n) n._add_zero
 
     theorem _add_assoc : ∀ (a b c : ℚ), (a + b) + c = a + (b + c) := by
       intro a b c
@@ -189,38 +189,16 @@ namespace ℚ
       simp [add_mul, mul_add]
       ac_nf
 
-
-    @[default_instance] instance : Monoid ℚ where
-      add_zero := _add_zero
-      zero_add := _zero_add
-      add_assoc := _add_assoc
-
     @[default_instance] instance : CommMonoid ℚ where
+      _add_zero := _add_zero
+      _add_assoc := _add_assoc
       add_comm := _add_comm
 
-    theorem add_left_inj {a b : ℚ} : ∀ (c : ℚ), a + c = b + c ↔ a = b := by
-      intro c
-      apply Iff.intro
-      case mp =>
-        intro h
-        apply EC.sound' eqv.eqv a.sys_of_repr_spec b.sys_of_repr_spec
-        replace h := EC.sound_inv eqv.eqv h
-        unfold eqv add_fn_fn_fn at *
-        simp only [add_mul, mul_add] at *
-        ac_nf at *
-        simp only [←mul_assoc] at h
-        simp only [ℤ.add_left_inj, ℤ.mul_left_inj (ne_of_lt c.sys_of_repr.h).symm] at h
-        assumption
-      case mpr =>
-        intro;congr
-
-    theorem add_right_inj {a b : ℚ} : ∀ (c : ℚ), c + a = c + b ↔ a = b := by
-      intro c
-      simp only [add_comm c]
-      exact add_left_inj c
-
-
   end add
+
+  section neg
+
+  end neg
 
 
 end ℚ

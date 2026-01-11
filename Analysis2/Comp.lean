@@ -20,14 +20,10 @@ namespace Comp
 
   @[reducible] def gt (n m : α) : Prop := lt m n
 
-  notation:50 (priority := high) lhs:51 " ≤ " rhs:51 => le lhs rhs
-  notation:50 (priority := high) lhs:51 " < " rhs:51 => lt lhs rhs
   notation:50 (priority := high) lhs:51 " ≥ " rhs:51 => le rhs lhs
   notation:50 (priority := high) lhs:51 " > " rhs:51 => lt rhs lhs
-  -- infix :50 " ≤ "  => le
-  -- infix :50 " < "  => lt
-  -- infix :50 " ≥ "  => ge
-  -- infix :50 " > "  => gt
+  notation:50 (priority := high) lhs:51 " ≤ " rhs:51 => le lhs rhs
+  notation:50 (priority := high) lhs:51 " < " rhs:51 => lt lhs rhs
 
   -- alternative name
   theorem le_self : ∀(n : α), n ≤ n := le_refl

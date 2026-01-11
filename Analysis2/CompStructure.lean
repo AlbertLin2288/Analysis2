@@ -1,3 +1,4 @@
+import Analysis2.Logic
 import Analysis2.Operator
 import Analysis2.Structure
 import Analysis2.Comp
@@ -78,6 +79,14 @@ namespace OrderedCommGroup
     rw [←add_assoc, add_neg, zero_add, add_left_comm, add_neg, add_zero] at h
     exact h
 
+  theorem le_of_neg_le_neg {a b : α} : -b ≤ -a → a ≤ b := by
+    intro h
+    rw [←neg_neg a, ← neg_neg b]
+    exact neg_le_neg_of_le h
+
+  theorem neg_le_neg_iff {a b : α} : -b ≤ -a ↔ a ≤ b :=
+    ⟨le_of_neg_le_neg, neg_le_neg_of_le⟩
+
   theorem le_of_add_le_add_right {a b c : α} : a + c ≤ b + c → a ≤ b := by
     intro h
     rw [←add_zero a, ←add_zero b, ←add_neg c, ←add_assoc, ←add_assoc]
@@ -102,6 +111,25 @@ namespace OrderedCommGroup
   theorem sub_nonneg_iff {a b : α} : zero ≤ b - a ↔ a ≤ b :=
     ⟨le_of_sub_noneg, sub_nonneg_of_le⟩
 
+  theorem add_lt_add_left {a b : α} : ∀(c : α), a < b → c + a < c + b :=
+    fun _ => contrapos le_of_add_le_add_left
+
+  theorem add_lt_add_right {a b : α} : ∀(c : α), a < b → a + c < b + c :=
+    fun _ => contrapos le_of_add_le_add_right
+
+  theorem neg_lt_neg_of_lt {a b : α} : a < b → -a > -b := by
+    intro h
+    replace h := add_lt_add_right (-a + -b) h
+    rw [←add_assoc, add_neg, zero_add, add_left_comm, add_neg, add_zero] at h
+    exact h
+
+  theorem lt_of_neg_lt_neg {a b : α} : -b < -a → a < b := by
+    intro h
+    rw [←neg_neg a, ← neg_neg b]
+    exact neg_lt_neg_of_lt h
+
+  theorem neg_lt_neg_iff {a b : α} : -b < -a ↔ a < b :=
+    ⟨lt_of_neg_lt_neg, neg_lt_neg_of_lt⟩
 
 end OrderedCommGroup
 

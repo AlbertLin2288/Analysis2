@@ -49,11 +49,10 @@ namespace Comp
   theorem eq_or_gt_of_ge {n m : α} : n ≥ m → n = m ∨ n > m :=
     fun h => (lt_or_eq_of_le h).elim (Or.inr ·) (Or.inl ·.symm)
 
-  theorem lt_or_eq_or_gt : ∀ (n m : α), n< m ∨ n = m ∨ n > m :=
+  theorem lt_or_eq_or_gt : ∀ (n m : α), n < m ∨ n = m ∨ n > m :=
     fun n m => (le_total n m).elim
       (fun h => (lt_or_eq_of_le h).elim Or.inl fun h' => Or.inr (Or.inl h'))
       fun h => Or.inr (eq_or_gt_of_ge h)
-
 
   theorem le_or_ge : ∀ (n m : α), n ≤ m ∨ n ≥ m :=
     fun n m => (lt_or_eq_or_gt n m).elim (fun h => Or.inl (le_of_lt h)) (fun h => Or.inr (h.elim (le_of_eq ·.symm) (le_of_lt ·)))
@@ -79,6 +78,29 @@ namespace Comp
 
   theorem le_of_not_le {a b : α} : ¬(a ≤ b) → b ≤ a :=
     ((le_or_ge a b).resolve_left ·)
+
+  theorem lt_of_lt_le {a b c : α} : a < b → b ≤ c → a < c :=
+    fun h h' h'' => h (le_trans _ _ _ h' h'')
+
+  theorem lt_of_le_lt {a b c : α} : a ≤ b → b < c → a < c :=
+    fun h h' h'' => h' (le_trans _ _ _ h'' h)
+
+  theorem lt_of_lt_lt {a b c : α} : a < b → b < c → a < c :=
+    fun h => lt_of_le_lt (le_of_lt h)
+
+  theorem lt_trans {a b c : α} : a < b → b < c → a < c :=  lt_of_lt_lt
+
+  theorem le_of_le_le {a b c : α} : a ≤ b → b ≤ c → a ≤ c :=
+    le_trans _ _ _
+
+  theorem le_of_le_lt {a b c : α} : a ≤ b → b < c → a ≤ c :=
+    fun h h' => le_of_lt (lt_of_le_lt h h')
+
+  theorem le_of_lt_le {a b c : α} : a < b → b ≤ c → a ≤ c :=
+    fun h h' => le_of_lt (lt_of_lt_le h h')
+
+  theorem le_of_lt_lt {a b c : α} : a < b → b < c → a ≤ c :=
+    fun h h' => le_of_lt (lt_of_lt_lt h h')
 
 
 #check Std.IsLinearOrder

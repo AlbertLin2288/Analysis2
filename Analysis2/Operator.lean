@@ -20,13 +20,18 @@ class Sub (α : Type) where
 class Neg (α : Type) where
   neg : α → α
 
+class Abs (α : Type) where
+  abs : α → α
+
+class Inv (α : Type) [Zero α] where
+  inv : (Σ'(a : α), a ≠ Zero.zero) → α
+
 infixl:65(priority := high) " + "   => Add.add
 infixl:65(priority := high) " - "   => Sub.sub
 infixl:70(priority := high) " * "   => Mul.mul
 -- infixl:70(priority := high) " / "   => Div.div
 prefix:75(priority := high) "-"     => Neg.neg
-
-
+postfix:max (priority := high) "⁻¹" => Inv.inv
 
 -- #check Lean.Meta.Symm.symmExt
 

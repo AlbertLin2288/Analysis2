@@ -54,6 +54,9 @@ namespace Comp
       (fun h => (lt_or_eq_of_le h).elim Or.inl fun h' => Or.inr (Or.inl h'))
       fun h => Or.inr (eq_or_gt_of_ge h)
 
+  theorem eq_or_lt_or_gt : ∀ (n m : α), n = m ∨ n < m ∨ n > m :=
+    fun n m => (lt_or_eq_or_gt n m).elim (fun h => Or.inr (Or.inl h)) (·.elim Or.inl (fun h => Or.inr (Or.inr h)))
+
   theorem le_or_ge : ∀ (n m : α), n ≤ m ∨ n ≥ m :=
     fun n m => (lt_or_eq_or_gt n m).elim (fun h => Or.inl (le_of_lt h)) (fun h => Or.inr (h.elim (le_of_eq ·.symm) (le_of_lt ·)))
 

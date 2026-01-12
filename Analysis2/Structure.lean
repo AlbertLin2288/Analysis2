@@ -212,12 +212,25 @@ end CommSemiRing
 
 
 
-class CommRing (α : Type) [Zero α] [Add α] [One α] [Mul α] [Neg α] [CommMonoid α] [CommSemiRing α] [CommGroup α]
+class CommRing (α : Type) [Zero α] [Add α] [One α] [Mul α] [Neg α] [CommMonoid α] [CommGroup α] where
+  _mul_one : ∀(a : α), a * one = a
+  _mul_assoc : ∀(a b c : α), (a * b) * c = a * (b * c)
+  _add_mul : ∀(a b c : α), (a + b) * c = a * c + b * c
+  _zero_ne_one : (zero : α) ≠ one -- non-trvial
+  _mul_comm : ∀(a b : α), a * b = b * a
 
 namespace CommRing
 
   open Monoid CommGroup SemiRing
-  variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Neg α] [CommMonoid α] [CommSemiRing α] [CommGroup α]
+  variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Neg α] [CommMonoid α] [CommGroup α] [CommRing α]
+
+  private theorem _mul_zero : ∀ (a : α), a * zero = zero := by
+    intro a
+    rw [←add_right_inj_iff (c := a), add_zero]
+    rw (occs := .pos [1]) [←_mul_one a]
+    rw [_mul_comm, _mul_comm a, ←_add_mul, add_zero, _mul_comm, _mul_one]
+
+  @[default_instance] instance : CommSemiRing α := ⟨_mul_one, _mul_assoc, _mul_zero, _add_mul, _zero_ne_one, _mul_comm⟩
 
   theorem mul_neg_left {a b : α} : (-a) * b = -(a * b) := by
     rw [←sum_zero_iff, ←add_mul, neg_add, zero_mul]
@@ -232,5 +245,57 @@ namespace CommRing
     intros;simp only [sub_eq_add_neg, add_mul, mul_neg_left]
 
 end CommRing
+
+
+
+class CommRing' (α : Type) [Zero α] [Add α] [One α] [Mul α] [Neg α] [CommMonoid α] [CommGroup α] [CommRing α] where
+  mul_eq_zero {a b : α} : a * b = zero → a = zero ∨ b = zero -- equivalent to mul_pos, see test2
+
+namespace CommRing'
+  open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing
+  variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Neg α] [Inv α] [CommMonoid α] [CommGroup α] [CommRing α] [CommRing' α]
+
+end CommRing'
+
+
+
+class Field (α : Type) [Zero α] [Add α] [One α] [Mul α] [Neg α] [Inv α] [CommMonoid α] [CommGroup α] [CommRing α] where
+  mul_inv_cancel : ∀(a : α), (h0 : a ≠ zero) → a * ⟨a, h0⟩⁻¹ = one
+
+namespace Field
+  open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing CommRing'
+  variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Neg α] [Inv α] [CommMonoid α] [CommGroup α] [CommRing α] [Field α]
+
+  theorem inv_mul_cancel : ∀(a : α), (h : a ≠ zero) → ⟨a, h⟩⁻¹ * a = one :=
+    fun a h => (mul_comm a ⟨a, h⟩⁻¹) ▸ (mul_inv_cancel a h)
+
+  theorem mul_inv_mul_cancel_right {a b : α} (h : b ≠ zero) : (a * ⟨b, h⟩⁻¹) * b = a := by
+    rw [mul_assoc, inv_mul_cancel , mul_one]
+
+  theorem mul_inv_mul_cancel_left {a b : α} (h : a ≠ zero) : a * (⟨a, h⟩⁻¹ * b) = b := by
+    rw [←mul_assoc, mul_inv_cancel, one_mul]
+
+  theorem mul_mul_inv_cancel_right {a b : α} (h : b ≠ zero) : (a * b) * ⟨b, h⟩⁻¹ = a := by
+    rw [mul_assoc, mul_inv_cancel, mul_one]
+
+  theorem mul_mul_inv_cancel_left1 {a b : α} (h : a ≠ zero) : (a * b) * ⟨a, h⟩⁻¹ = b := by
+    rw [mul_right_comm, mul_inv_cancel, one_mul]
+
+  theorem mul_mul_inv_cancel_left2 {a b : α} (h : a ≠ zero) : a * (b * ⟨a, h⟩⁻¹) = b := by
+    rw [mul_left_comm, mul_inv_cancel, mul_one]
+
+  theorem _mul_eq_zero {a b : α} : a * b = zero → a = zero ∨ b = zero := by
+    intro h
+    apply byContradiction _
+    intro h'
+    replace h' := not_or.mp h'
+    replace h := congrArg (.*⟨b,h'.right⟩⁻¹*⟨a,h'.left⟩⁻¹) h
+    simp only [zero_mul, mul_mul_inv_cancel_right, mul_inv_cancel] at h
+    exact zero_ne_one h.symm
+
+  @[default_instance] instance : CommRing' α where
+    mul_eq_zero := _mul_eq_zero
+
+end Field
 
 end my

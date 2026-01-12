@@ -6,15 +6,38 @@ noncomputable section
 namespace my
 open Classical
 open Comp
-open Zero One
+open Zero One Abs
+
+--definition that doesn't require abs to make sence
+section abs
+  variable {α : Type} [Zero α] [Neg α] [Comp α]
+
+  private def _abs : α → α :=
+      fun a => (le_or_gt zero a).elim' (fun _ => a) (fun _ => -a)
+
+  @[default_instance] instance : Abs α where
+    abs := _abs
+
+  theorem abs_def {a : α} : abs a = _abs a := rfl
+
+  theorem abs_of_pos {a : α} : zero < a → abs a = a :=
+    fun h => (le_or_gt zero a).elim'_spec (p:=(·=a)) (fun _ => rfl) (fun h' => (not_lt_of_lt h' h).elim)
+
+  theorem abs_of_neg {a : α} : a < zero → abs a = -a :=
+    fun h => (le_or_gt zero a).elim'_spec (p:=(·=-a)) (fun h' => (not_lt_of_le h' h).elim) (fun _ => rfl)
+
+  theorem abs_of_nonneg {a : α} : zero ≤ a → abs a = a :=
+    fun h => (le_or_gt zero a).elim'_spec (p:=(·=a)) (fun _ => rfl) (fun h' => (not_lt_of_le h h').elim)
+
+  theorem abs_of_zero : abs zero = (zero : α) := abs_of_nonneg (le_refl zero)
+
+end abs
+
 
 
 class OrderedMonoid (α : Type) [Zero α] [Add α] [Monoid α] [Comp α] where
   add_le_add_left {a b : α} (c : α) : a ≤ b → c + a ≤ c + b
   add_le_add_right {a b : α} (c : α) : a ≤ b → a + c ≤ b + c
-
-
-
 
 
 namespace OrderedMonoid
@@ -151,6 +174,50 @@ namespace OrderedCommGroup
   theorem sub_pos_iff {a b : α} : zero < b - a ↔ a < b :=
     ⟨lt_of_sub_pos, sub_pos_of_lt⟩
 
+  theorem neg_nonneg_is_nonpos {a : α} : zero ≤ a → -a ≤ zero := by
+    intro;rwa [←neg_zero, neg_le_neg_iff]
+
+  theorem neg_nonpos_is_nonneg {a : α} : a ≤ zero → zero ≤ -a := by
+    intro;rwa [←neg_zero, neg_le_neg_iff]
+
+  theorem neg_pos_is_neg {a : α} : zero < a → -a < zero := by
+    intro;rwa [←neg_zero, neg_lt_neg_iff]
+
+  theorem neg_pos_is_nonpos {a : α} : zero < a → -a ≤ zero :=
+    fun h => le_of_lt (neg_pos_is_neg h)
+
+  theorem neg_neg_is_pos {a : α} : a < zero → zero < -a := by
+    intro;rwa [←neg_zero, neg_lt_neg_iff]
+
+  theorem neg_neg_is_nonneg {a : α} : a < zero → zero ≤ -a :=
+    fun h => le_of_lt (neg_neg_is_pos h)
+
+  theorem abs_nonneg : ∀(a : α), zero ≤ abs a :=
+    fun a => (le_or_gt zero a).elim'_spec id neg_neg_is_nonneg
+
+  set_option linter.unusedSectionVars false in
+  theorem abs_of_nonpos {a : α} : a ≤ zero → abs a = -a :=
+    fun h => (lt_or_eq_of_le h).elim abs_of_neg (fun h => (by rw [h,abs_of_zero,neg_zero]))
+
+  set_option linter.unusedSectionVars false in
+  theorem abs_of_pos_is_pos {a : α} : zero < a → zero < abs a :=
+    fun h => (abs_of_pos h).substr h
+
+  theorem abs_of_neg_is_pos {a : α} : a < zero → zero < abs a :=
+    fun h => (abs_of_neg h).substr neg_neg_is_pos h
+
+  theorem abs_of_nonzero_is_pos {a : α} : a ≠ zero → abs a > zero :=
+    fun h => (lt_or_eq_or_gt a zero).elim abs_of_neg_is_pos (·.elim (fun h' => (h h').elim) abs_of_pos_is_pos)
+
+  theorem eq_zero_of_abs_eq_zero {a : α} : abs a = zero → a = zero :=
+    fun h => (eq_or_lt_or_gt a zero).elim (id) (fun h' => False.elim (h'.elim
+      (fun h'' => ne_of_lt (abs_of_neg_is_pos h'') h.symm)
+      (fun h'' => ne_of_lt (abs_of_pos_is_pos h'') h.symm)))
+
+  theorem abs_eq_zero_iff {a : α} : abs a = zero ↔ a = zero :=
+    ⟨eq_zero_of_abs_eq_zero, (·.substr abs_of_zero)⟩
+
+
 end OrderedCommGroup
 
 
@@ -168,6 +235,9 @@ namespace OrderedSemiRing
 
   theorem zero_lt_one : (zero : α) < one := lt_of_le_ne zero_le_one zero_ne_one
 
+  theorem mul_nonneg {a b : α} : zero ≤ a → zero ≤ b → zero ≤ a * b :=
+    fun h h' => (zero_mul _).subst (motive:=(·≤_*_)) (mul_le_mul_of_nonneg_right h h')
+
   theorem mul_le_mul_of_pos_right {a b c : α} : a ≤ b → zero < c → a * c ≤ b * c :=
     fun h h' => mul_le_mul_of_nonneg_right h (le_of_lt h')
 
@@ -179,6 +249,12 @@ namespace OrderedSemiRing
 
   theorem lt_of_mul_lt_mul_pos_right {a b c : α} : a * c < b * c → zero < c → a < b :=
     fun h h' => byContradiction fun h'' => (not_lt_of_le (mul_le_mul_of_pos_right (le_of_not_lt h'') h')) h
+
+  theorem pos_of_mul_pos_left {a b : α} : zero < a * b → b > zero → zero < a :=
+    fun h => lt_of_mul_lt_mul_pos_right ((zero_mul b).substr h)
+
+  theorem pos_of_mul_pos_right {a b : α} : zero < a * b → a > zero → zero < b :=
+    fun h => lt_of_mul_lt_mul_pos_left ((mul_zero a).substr h)
 
 end OrderedSemiRing
 
@@ -206,40 +282,40 @@ end OrderedCommSemiRing
 
 
 
-class OrderedCommRing (α : Type) [Zero α] [Add α] [One α] [Mul α] [Neg α] [Comp α] [CommMonoid α] [CommSemiRing α] [CommGroup α] [CommRing α]
+class OrderedCommRing (α : Type) [Zero α] [Add α] [One α] [Mul α] [Neg α] [Comp α] [CommMonoid α] [CommGroup α] [CommRing α]
   [OrderedCommMonoid α] [OrderedCommGroup α] where
-  mul_nonneg {a b : α} : zero ≤ a → zero ≤ b → zero ≤ a * b
+  _mul_nonneg {a b : α} : zero ≤ a → zero ≤ b → zero ≤ a * b
   _zero_le_one : (zero : α) ≤ one -- WLOG
 
 namespace OrderedCommRing
 
   open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommGroup CommRing
   open OrderedMonoid OrderedCommMonoid OrderedSemiRing OrderedCommSemiRing OrderedCommGroup
-  variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Neg α] [Comp α] [CommMonoid α] [CommSemiRing α] [CommGroup α] [CommRing α]
+  variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Neg α] [Comp α] [CommMonoid α] [CommGroup α] [CommRing α]
   [OrderedCommMonoid α] [OrderedCommGroup α] [OrderedCommRing α]
 
   theorem _mul_le_mul_of_nonneg_right {a b c : α} : a ≤ b → zero ≤ c → a * c ≤ b * c := by
     intro h hc
     rw [←sub_nonneg_iff] at h |-
     rw [←sub_mul]
-    exact mul_nonneg h hc
+    exact _mul_nonneg h hc
 
   @[default_instance] instance : OrderedCommSemiRing α := ⟨_mul_le_mul_of_nonneg_right, _zero_le_one⟩
 
 end OrderedCommRing
 
-class OrderedCommRing' (α : Type) [Zero α] [Add α] [One α] [Mul α] [Neg α] [Comp α] [CommMonoid α] [CommSemiRing α] [CommGroup α] [CommRing α]
+class OrderedCommRing' (α : Type) [Zero α] [Add α] [One α] [Mul α] [Neg α] [Comp α] [CommMonoid α] [CommGroup α] [CommRing α] [CommRing' α]
   [OrderedCommMonoid α] [OrderedCommGroup α] [OrderedCommRing α] where
-  mul_eq_zero {a b : α} : a * b = zero → a = zero ∨ b = zero -- equivalent to mul_pos, see test2
+  -- mul_eq_zero {a b : α} : a * b = zero → a = zero ∨ b = zero -- equivalent to mul_pos, see test2
 
 namespace OrderedCommRing'
 
-
-  open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommGroup CommRing
+  open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommGroup CommRing CommRing'
   open OrderedMonoid OrderedCommMonoid OrderedSemiRing OrderedCommSemiRing OrderedCommGroup OrderedCommRing
-  variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Neg α] [Comp α] [CommMonoid α] [CommSemiRing α] [CommGroup α] [CommRing α]
+  variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Neg α] [Comp α] [CommMonoid α] [CommGroup α] [CommRing α] [CommRing' α]
   [OrderedCommMonoid α] [OrderedCommGroup α] [OrderedCommRing α] [OrderedCommRing' α]
 
+  set_option linter.unusedSectionVars false in
   theorem mul_pos {a b : α} : a > zero → b > zero → a * b > zero :=
     fun ha hb => lt_of_le_ne (mul_nonneg (le_of_lt ha) (le_of_lt hb)) fun h => (mul_eq_zero h.symm).elim (ne_of_lt ha).symm (ne_of_lt hb).symm
 
@@ -270,6 +346,36 @@ namespace OrderedCommRing'
   theorem mul_le_mul_pos_right_iff {a b c : α} : zero < c → (a * c ≤ b * c ↔ a ≤ b) :=
     fun h => ⟨(le_of_mul_le_mul_pos_right · h), (mul_le_mul_of_pos_right · h)⟩
 
+  theorem nonneg_of_mul_nonneg_left {a b : α} : zero ≤ a * b → b > zero → zero ≤ a :=
+    fun h => le_of_mul_le_mul_pos_right ((zero_mul b).substr h)
+
+  theorem nonneg_of_mul_nonneg_right {a b : α} : zero ≤ a * b → a > zero → zero ≤ b :=
+    fun h => le_of_mul_le_mul_pos_left ((mul_zero a).substr h)
+
+  --  by
+  --   intro h h'
+  --   rw [←zero_mul b] at h
+  --   exact le_of_mul_le_mul_pos_right h h'
+
 end OrderedCommRing'
+
+
+
+class OrderedField (α : Type) [Zero α] [Add α] [One α] [Mul α] [Neg α] [Comp α] [CommMonoid α] [CommGroup α] [CommRing α] [CommRing' α]
+  [OrderedCommMonoid α] [OrderedCommGroup α] [OrderedCommRing α] where
+
+
+namespace OrderedField
+
+  open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommGroup CommRing CommRing'
+  open OrderedMonoid OrderedCommMonoid OrderedSemiRing OrderedCommSemiRing OrderedCommGroup OrderedCommRing OrderedCommRing'
+  variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Neg α] [Inv α] [Comp α] [CommMonoid α] [CommGroup α] [CommRing α] [CommRing' α]
+  [OrderedCommMonoid α] [OrderedCommGroup α] [OrderedCommRing α] [Field α]
+
+  @[default_instance] instance : OrderedCommRing' α where
+
+
+end OrderedField
+
 
 end my

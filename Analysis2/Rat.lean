@@ -9,7 +9,7 @@ import Analysis2.Int
 noncomputable section
 namespace my
 open Classical
-open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing
+open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing CommRing' Field
 open Comp
 open OrderedMonoid OrderedCommMonoid OrderedCommGroup OrderedSemiRing OrderedCommSemiRing OrderedCommRing OrderedCommRing'
 open Zero One
@@ -115,6 +115,18 @@ namespace ℚ
       apply EC.sound' eqv.eqv h zero_is_member_zero _
       unfold eqv zero_repr
       simp only [h', zero_mul, mul_zero]
+
+    theorem num_eq_zero_of_eq_zero {a b : ℤ} {h : zero < b} : EC.from_elm eqv.eqv ⟨a, b, h⟩ = (zero : ℚ) → a = zero := by
+      intro h'
+      replace h' := EC.sound_inv eqv.eqv h'
+      simp only [eqv, zero_repr, mul_one, mul_zero] at h'
+      exact h'
+
+    theorem num_eq_zero_of_eq_zero' {a : ℚ_con} {S : ℚ} (h : S.is_member a) : S = zero → a.fst = zero := by
+      intro h'
+      replace h' := EC.sound_inv' h zero_is_member_zero h'
+      simp only [eqv, zero_repr, mul_one, mul_zero] at h'
+      exact h'
 
   end basic
 
@@ -316,17 +328,6 @@ namespace ℚ
       simp only
       ac_nf
 
-    private theorem _mul_zero : ∀ (a : ℚ), a * zero = zero := by
-      intro a
-      repeat first | rw [mul_def]
-      unfold mul mul_fn mul_fn_fn
-      repeat first
-      | rw [EC.lift_spec (zero : ℚ) _ (EC.is_member_of_from_elm _ eqv.eqv)]
-      | rw [EC.lift_spec _ _ (EC.sys_of_repr_spec _)]
-      apply EC.sound' eqv.eqv (EC.is_member_of_from_elm _ eqv.eqv) zero_is_member_zero _
-      unfold mul_fn_fn_fn zero_repr eqv
-      simp only [mul_zero, mul_one]
-
     private theorem _add_mul : ∀ (a b c : ℚ), (a + b) * c = a * c + b * c := by
       intro a b c
       repeat first | rw [mul_def] | rw [add_def]
@@ -359,17 +360,87 @@ namespace ℚ
       unfold eqv mul_fn_fn_fn
       ac_nf
 
-    @[default_instance] instance : CommSemiRing ℚ where
+    @[default_instance] instance : CommRing ℚ where
       _mul_one := _mul_one
       _mul_assoc := _mul_assoc
-      _mul_zero := _mul_zero
       _add_mul := _add_mul
       _zero_ne_one := _zero_ne_one
-      mul_comm := _mul_comm
+      _mul_comm := _mul_comm
 
-    @[default_instance] instance : CommRing ℚ where
 
   end mul
+
+  section inv
+
+    -- def inv_fn_fn : (Σ'(a : ℚ_con), a.fst ≠ zero) → ℚ_con :=
+    --   fun ah => ((eq_or_lt_or_gt ah.fst.fst zero).resolve_left ah.snd).elim'
+    --     (⟨ah.fst.snd, -ah.fst.fst, neg_neg_is_pos ·⟩)
+    --     (⟨ah.fst.snd, ah.fst.fst, ·⟩)
+    --   --⟨-a.fst, a.snd, a.h⟩
+
+    -- def inv_fn : (Σ'(a : ℚ_con), a.fst ≠ zero) → ℚ :=
+    --   fun a => ℚ.mk' (inv_fn_fn a)
+
+
+    -- def inv_fn_fn : (a : ℚ_con) → a.fst ≠ zero → ℚ_con :=
+    --   fun a h => ((eq_or_lt_or_gt a.fst zero).resolve_left h).elim'
+    --     (⟨a.snd, -a.fst, neg_neg_is_pos ·⟩) (⟨a.snd, a.fst, ·⟩)
+
+    -- def inv_fn : (a : ℚ_con) → a.fst ≠ zero → ℚ :=
+    --   fun a h => ℚ.mk' (inv_fn_fn a h)
+
+    -- private theorem inv_respect : ∀(a b : ℚ_con), eqv a b → inv_fn a ≍ inv_fn b := by
+    --   -- intro ⟨b1, b2, h⟩ ⟨b1', b2', h'⟩ h''
+    --   -- apply EC.sound
+    --   -- unfold eqv inv_fn_fn at *
+    --   -- simp only [mul_inv_left, mul_inv_right] at *
+    --   -- congr
+    --   sorry
+
+    -- -- def inv : ℚ → ℚ :=
+    -- def inv :=
+    --   EC.hlift (f := inv_fn) eqv.eqv inv_fn inv_respect
+
+    def inv_fn_fn : (Σ'(a : ℚ_con), a.fst ≠ zero) → ℚ_con :=
+      fun ah => ((eq_or_lt_or_gt ah.fst.fst zero).resolve_left ah.snd).elim'
+        (⟨ah.fst.snd, -ah.fst.fst, neg_neg_is_pos ·⟩)
+        (⟨ah.fst.snd, ah.fst.fst, ·⟩)
+      --⟨-a.fst, a.snd, a.h⟩
+
+    def inv_fn : (Σ'(a : ℚ_con), a.fst ≠ zero) → ℚ :=
+      fun a => ℚ.mk' (inv_fn_fn a)
+
+    -- def inv : (Σ'(a : ℚ), a ≠ zero) → ℚ :=
+    --   fun ah => inv_fn ⟨ah.fst.sys_of_repr, (fun h => ah.snd (num_eq_zero' ah.fst.sys_of_repr_spec h))⟩
+    def inv' : (a : ℚ) → a ≠ zero → ℚ :=
+      fun a h => inv_fn ⟨a.sys_of_repr, (fun h' => h (num_eq_zero' a.sys_of_repr_spec h'))⟩
+
+    def inv : (Σ'(a : ℚ), a ≠ zero) → ℚ :=
+      fun a => a.fst.inv' a.snd
+      -- fun ah => inv_fn ⟨ah.fst.sys_of_repr, (by
+      --   intro h
+      --   let a := ah.fst.sys_of_repr
+      --   have h' := num_eq_zero' ah.fst.sys_of_repr_spec h
+      --   have := ah.snd h'
+      --   -- have h' := EC.sound' (a := a) eqv.eqv (EC.sys_of_repr_spec _) zero_is_member_zero
+      --   -- unfold eqv zero_repr at h'
+      --   -- simp only [mul_one, mul_zero] at h'
+      --   -- replace h' := h' h
+      --   -- have := num_eq_zero_of_eq_zero' ah.fst.sys_of_repr_spec h'
+      --   -- have := num_eq_zero' ah.fst.sys_of_repr_spec h'
+      --   -- have := EC.sound_inv eqv.eqv h
+      --   sorry
+      -- )⟩
+
+    @[default_instance] instance : Inv ℚ where
+      inv := inv
+
+    theorem inv_def {a : ℚ} {h : a ≠ zero} : ⟨a, h⟩⁻¹ = inv ⟨a, h⟩ := rfl
+
+    -- the more useful one :
+    theorem inv_def' {a : ℚ} {h : a ≠ zero} : ⟨a, h⟩⁻¹ = a.inv' h := rfl
+
+  end inv
 
   section comp
 
@@ -504,22 +575,22 @@ namespace ℚ
 
 
     @[default_instance] instance : OrderedCommRing ℚ where
-      mul_nonneg := _mul_nonneg
+      _mul_nonneg := _mul_nonneg
       _zero_le_one := _zero_le_one
 
-    private theorem _mul_eq_zero {a b : ℚ} : a * b = zero → a = zero ∨ b = zero := by
-      rw [mul_def]
-      unfold mul mul_fn mul_fn_fn EC.lift mul_fn_fn_fn
-      intro h
-      replace h := EC.sound_inv eqv.eqv h
-      unfold eqv zero_repr at h
-      simp only [mul_zero, mul_one] at h
-      exact (mul_eq_zero h).elim
-        (fun h' => Or.inl (num_eq_zero' a.sys_of_repr_spec h'))
-        (fun h' => Or.inr (num_eq_zero' b.sys_of_repr_spec h'))
+    -- private theorem _mul_eq_zero {a b : ℚ} : a * b = zero → a = zero ∨ b = zero := by
+    --   rw [mul_def]
+    --   unfold mul mul_fn mul_fn_fn EC.lift mul_fn_fn_fn
+    --   intro h
+    --   replace h := EC.sound_inv eqv.eqv h
+    --   unfold eqv zero_repr at h
+    --   simp only [mul_zero, mul_one] at h
+    --   exact (mul_eq_zero h).elim
+    --     (fun h' => Or.inl (num_eq_zero' a.sys_of_repr_spec h'))
+    --     (fun h' => Or.inr (num_eq_zero' b.sys_of_repr_spec h'))
 
-    @[default_instance] instance : OrderedCommRing' ℚ where
-      mul_eq_zero := _mul_eq_zero
+    -- @[default_instance] instance : OrderedCommRing' ℚ where
+    --   mul_eq_zero := _mul_eq_zero
 
   end comp
 

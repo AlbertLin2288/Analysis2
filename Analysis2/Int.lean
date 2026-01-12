@@ -316,17 +316,6 @@ namespace ℤ
 
     theorem mul_def {a b : ℤ} : a * b = a.mul b := rfl
 
-    theorem _mul_zero : ∀(n : ℤ), n * zero = zero := by
-      intro n
-      let np := n.sys_of_repr
-      repeat rw [mul_def]
-      unfold mul mul_fn
-      rw [EquivalentClass.lift_spec n np n.sys_of_repr_spec]
-      rw [EquivalentClass.lift_spec _ zero_repr zero_is_member_zero]
-      unfold mul_fn_fn mul_fn_fn_fn zero_repr
-      simp only [ℕ.mul_zero, ℕ.add_zero]
-      rfl
-
     theorem _mul_one : ∀(n : ℤ), n * one = n := by
       intro n
       let np := n.sys_of_repr
@@ -406,15 +395,13 @@ namespace ℤ
       intro a b c
       simp only [_mul_comm _ c, _mul_add]
 
-    @[default_instance] instance : CommSemiRing ℤ where
+    @[default_instance] instance : CommRing ℤ where
       _mul_one := _mul_one
       _mul_assoc := _mul_assoc
-      _mul_zero := _mul_zero
       _add_mul := _add_mul
       _zero_ne_one := zero_ne_one
-      mul_comm := _mul_comm
+      _mul_comm := _mul_comm
 
-    @[default_instance] instance : CommRing ℤ where
 
     theorem mul_left_inj {a b c : ℤ} (ha : c ≠ zero) : a * c = b * c ↔ a = b := by
       apply Iff.intro
@@ -476,6 +463,8 @@ namespace ℤ
         rw [← mul_zero a, mul_right_inj ha0] at h
         exact Or.inr h
 
+    @[default_instance] instance : CommRing' ℤ where
+      mul_eq_zero := _mul_eq_zero
 
   end mul
 
@@ -641,11 +630,10 @@ namespace ℤ
       ac_nf
 
     @[default_instance] instance : OrderedCommRing ℤ where
-      mul_nonneg := _mul_nonneg
+      _mul_nonneg := _mul_nonneg
       _zero_le_one := _zero_le_one
 
     @[default_instance] instance : OrderedCommRing' ℤ where
-      mul_eq_zero := _mul_eq_zero
 
     section nums
 

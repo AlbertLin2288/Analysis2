@@ -304,6 +304,8 @@ namespace OrderedCommRing
 
 end OrderedCommRing
 
+
+
 class OrderedCommRing' (α : Type) [Zero α] [Add α] [One α] [Mul α] [Neg α] [Comp α] [CommMonoid α] [CommGroup α] [CommRing α] [CommRing' α]
   [OrderedCommMonoid α] [OrderedCommGroup α] [OrderedCommRing α] where
   -- mul_eq_zero {a b : α} : a * b = zero → a = zero ∨ b = zero -- equivalent to mul_pos, see test2
@@ -352,6 +354,14 @@ namespace OrderedCommRing'
   theorem nonneg_of_mul_nonneg_right {a b : α} : zero ≤ a * b → a > zero → zero ≤ b :=
     fun h => le_of_mul_le_mul_pos_left ((mul_zero a).substr h)
 
+  theorem mul_pos_neg_is_neg {a b : α} : a > zero → b < zero → a * b < zero := by
+    intro h h';rw [←mul_zero a];exact mul_lt_mul_of_pos_left h' h
+
+  -- theorem mul_neg_neg_is_pos {a b : α} : a < zero → b < zero → a * b > zero := by
+  --   intro h h';rw [←mul_zero a];exact mul_lt_mul_of_neg_left h' h
+
+  theorem mul_neg_pos_is_neg {a b : α} : a < zero → b > zero → a * b < zero := by
+    intro h h';rw [←zero_mul b];exact mul_lt_mul_of_pos_right h h'
   --  by
   --   intro h h'
   --   rw [←zero_mul b] at h

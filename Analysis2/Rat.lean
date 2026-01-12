@@ -401,19 +401,150 @@ namespace ℚ
     -- def inv :=
     --   EC.hlift (f := inv_fn) eqv.eqv inv_fn inv_respect
 
-    def inv_fn_fn : (Σ'(a : ℚ_con), a.fst ≠ zero) → ℚ_con :=
-      fun ah => ((eq_or_lt_or_gt ah.fst.fst zero).resolve_left ah.snd).elim'
-        (⟨ah.fst.snd, -ah.fst.fst, neg_neg_is_pos ·⟩)
-        (⟨ah.fst.snd, ah.fst.fst, ·⟩)
+    def inv_fn_fn : (a : ℚ_con) → a.fst ≠ zero → ℚ_con :=
+      fun a h => ((eq_or_lt_or_gt a.fst zero).resolve_left h).elim'
+        (⟨-a.snd, -a.fst, neg_neg_is_pos ·⟩)
+        (⟨a.snd, a.fst, ·⟩)
       --⟨-a.fst, a.snd, a.h⟩
 
-    def inv_fn : (Σ'(a : ℚ_con), a.fst ≠ zero) → ℚ :=
-      fun a => ℚ.mk' (inv_fn_fn a)
+    def inv_fn : (a : ℚ_con) → a.fst ≠ zero → ℚ :=
+      fun a h => ℚ.mk' (inv_fn_fn a h)
 
     -- def inv : (Σ'(a : ℚ), a ≠ zero) → ℚ :=
     --   fun ah => inv_fn ⟨ah.fst.sys_of_repr, (fun h => ah.snd (num_eq_zero' ah.fst.sys_of_repr_spec h))⟩
     def inv' : (a : ℚ) → a ≠ zero → ℚ :=
-      fun a h => inv_fn ⟨a.sys_of_repr, (fun h' => h (num_eq_zero' a.sys_of_repr_spec h'))⟩
+      fun a h => inv_fn a.sys_of_repr (fun h' => h (num_eq_zero' a.sys_of_repr_spec h'))
+
+    theorem inv_spec_eqv {S : ℚ} (a : ℚ_con) (h : S.is_member a) : (S ≠ zero) = (a.fst ≠ zero) :=
+      congrArg (¬·) (propext ⟨num_eq_zero_of_eq_zero' h, num_eq_zero' h⟩)
+
+    theorem inv_spec {S : ℚ} {h : S ≠ zero} {a : ℚ_con} (hm : S.is_member a) : inv' S h = inv_fn a ((inv_spec_eqv a hm).mp h) := by
+      apply EC.sound
+      unfold eqv inv_fn_fn
+      let s := S.sys_of_repr
+      have hs := fun h0 => h (num_eq_zero' S.sys_of_repr_spec h0)
+      have ha := (inv_spec_eqv a hm).mp h
+      have hos := (eq_or_lt_or_gt s.fst zero).resolve_left hs
+      have hoa := (eq_or_lt_or_gt a.fst zero).resolve_left ha
+      let elm1 := (hos.elim' (c := ℚ_con)
+        (fun x => ⟨ -s.snd, -s.fst, neg_neg_is_pos x ⟩)
+        (fun x => ⟨ s.snd, s.fst, x ⟩))
+      let elm2 := (hoa.elim' (c := ℚ_con)
+          (fun x => ⟨ -a.snd, -a.fst, neg_neg_is_pos x ⟩)
+          (fun x => ⟨ a.snd, a.fst, x ⟩))
+      have heqv := S.member_related a s ⟨hm, S.sys_of_repr_spec⟩
+      unfold eqv at heqv; ac_nf at heqv
+      show elm1.fst * elm2.snd = elm1.snd * elm2.fst
+      apply Or.elim'_spec (c := ℚ_con) (p := (fun m => m.fst * elm2.snd = m.snd * elm2.fst))
+      <;>intro cs<;>simp only
+      <;>apply Or.elim'_spec (c := ℚ_con) (p := (fun m => _ * m.snd = _ * m.fst))
+      <;>intro ca<;>simp only [mul_neg_left, mul_neg_right]
+      <;>ac_nf<;>rw[heqv]
+
+    theorem inv_spec2 {S : ℚ} {a : ℚ_con} {h : a.fst ≠ zero} (hm : S.is_member a) : inv' S ((inv_spec_eqv a hm).mpr h) = inv_fn a h := inv_spec hm
+
+      -- show (hos.elim' (c := ℚ_con)
+      --     (fun x => ⟨ (s).snd, -(s).fst, neg_neg_is_pos x ⟩)
+      --     (fun x => ⟨ (s).snd, (s).fst, x ⟩) ).fst *
+      --   (hoa.elim' (c := ℚ_con)
+      --     (fun x => ⟨ a.snd, -a.fst, neg_neg_is_pos x ⟩)
+      --     (fun x => ⟨ a.snd, a.fst, x ⟩)).snd =
+      --   (hos.elim' (c := ℚ_con)
+      --     (fun x => ⟨ (s).snd, -(s).fst, neg_neg_is_pos x ⟩)
+      --     (fun x => ⟨ (s).snd, (s).fst, x ⟩)).snd *
+      --   (hoa.elim' (c := ℚ_con)
+      --     (fun x => ⟨ a.snd, -a.fst, neg_neg_is_pos x ⟩)
+      --     (fun x => ⟨ a.snd, a.fst, x ⟩)).fst
+      -- #check Or.elim'_spec
+
+
+      -- show (hos.elim' (c := ℚ_con)
+      --     (fun x => ⟨ (s).snd, -(s).fst, neg_neg_is_pos x ⟩)
+      --     (fun x => ⟨ (s).snd, (s).fst, x ⟩) ).fst *
+      --   (hoa.elim' (c := ℚ_con)
+      --     (fun x => ⟨ a.snd, -a.fst, neg_neg_is_pos x ⟩)
+      --     (fun x => ⟨ a.snd, a.fst, x ⟩)).snd =
+      --   (hos.elim' (c := ℚ_con)
+      --     (fun x => ⟨ (s).snd, -(s).fst, neg_neg_is_pos x ⟩)
+      --     (fun x => ⟨ (s).snd, (s).fst, x ⟩)).snd *
+      --   (hoa.elim' (c := ℚ_con)
+      --     (fun x => ⟨ a.snd, -a.fst, neg_neg_is_pos x ⟩)
+      --     (fun x => ⟨ a.snd, a.fst, x ⟩)).fst
+
+
+    -- theorem inv_spec' (S : ℚ) {h : S ≠ zero} : ∀(a : ℚ_con), S.is_member a → inv' S ≍ inv_fn a := sorry
+
+      -- -- theorem inv_spec' {h : ∀ (a b : α), R a b → f a = f b} (S : EquivalentClass R) : ∀(a : α), is_member a S → inv' S = f a :=
+      -- set_option pp.proofs true in
+      -- theorem inv_spec' (S : ℚ) {h : S ≠ zero} : ∀(a : ℚ_con), S.is_member a → inv' S ≍ inv_fn a := by
+      --   intro a h'
+      --   have feq : (S ≠ zero) = (a.fst ≠ zero) := congrArg (¬·) (propext ⟨num_eq_zero_of_eq_zero' h', num_eq_zero' h'⟩)
+      --   -- have feq (S : ℚ) (a : ℚ_con) (h' : S.is_member a) : (S ≠ zero) = (a.fst ≠ zero) := congrArg (¬·) (propext ⟨num_eq_zero_of_eq_zero' h', num_eq_zero' h'⟩)
+      --   apply heq_of_eqRec_eq
+      --   case h₁ =>
+      --     -- congr 1
+      --     refine' implies_congr feq rfl
+      --     -- refine' implies_congr (feq S a h') rfl
+      --   case h₂ =>
+      --     funext h''
+      --     apply EC.sound' eqv.eqv _ (EC.is_member_of_from_elm _ eqv.eqv) _
+      --     -- unfold inv_fn
+      --     exact inv_fn_fn S.sys_of_repr (fun h0 => h (num_eq_zero' S.sys_of_repr_spec h0))
+      --     -- apply EC.is_member_of_from_elm
+      --     -- guard_expr (implies_congr feq rfl ▸ S.inv') =~ S.inv'
+      --     -- guard_expr ((implies_congr feq rfl) ▸ S.inv') =~ rfl ▸ (fun x => S.inv' (feq ▸ x))
+      --     -- simp?
+      --     unfold implies_congr rfl
+      --     guard_target =~ EquivalentClass.is_member (inv_fn_fn (EquivalentClass.sys_of_repr S) fun h0 => h (num_eq_zero' (EquivalentClass.sys_of_repr_spec S) h0))
+      --       -- ((fun he => S.inv' (feq.mpr he)) h'')
+      --       ((((sorry):(S ≠ zero → ℚ) = (a.fst ≠ zero → ℚ)) ▸ S.inv') h'')
+
+      --     have h4 : (((feq ▸ Eq.refl (S ≠ zero → ℚ)) : (S ≠ zero → ℚ) = (a.fst ≠ zero → ℚ)) ▸ S.inv') = S.inv' := by
+      --       -- simp only []
+      --       unfold Eq.symm
+      --       generalize ((((feq ▸ Eq.refl (S ≠ zero → ℚ)): (S ≠ zero → ℚ) = (a.fst ≠ zero → ℚ)) ▸ rfl) : (a.fst ≠ zero → ℚ) = (S ≠ zero → ℚ)) = x
+      --       generalize ((x ▸ rfl) : (S ≠ zero → ℚ) = (a.fst ≠ zero → ℚ)) = y
+      --       have h1 : y ▸ S.inv' ≍ S.inv' := cast_heq _ _
+      --       have h2 : x ▸ y ▸ S.inv' ≍ y ▸ S.inv' := cast_heq _ _
+      --       have h3 : x ▸ y ▸ S.inv' ≍ S.inv' := HEq.trans h2 h1
+      --       exact eq_of_heq h3
+      --     -- have h4 : (((feq ▸ Eq.refl (S ≠ zero → ℚ)) : (S ≠ zero → ℚ) = (a.fst ≠ zero → ℚ)) ▸ S.inv') = S.inv' := by
+      --     --   -- simp only []
+      --     --   unfold Eq.symm
+      --     --   generalize ((((feq ▸ Eq.refl (S ≠ zero → ℚ)): (S ≠ zero → ℚ) = (a.fst ≠ zero → ℚ)) ▸ rfl) : (a.fst ≠ zero → ℚ) = (S ≠ zero → ℚ)) = x
+      --     --   generalize ((x ▸ rfl) : (S ≠ zero → ℚ) = (a.fst ≠ zero → ℚ)) = y
+      --     --   have h1 : y ▸ S.inv' ≍ S.inv' := cast_heq _ _
+      --     --   have h2 : x ▸ y ▸ S.inv' ≍ y ▸ S.inv' := cast_heq _ _
+      --     --   have h3 : x ▸ y ▸ S.inv' ≍ S.inv' := HEq.trans h2 h1
+      --     --   exact eq_of_heq h3
+
+
+      --       -- ((((sorry):(S ≠ zero → ℚ) = (a.fst ≠ zero → ℚ)) ▸ S.inv') h'')
+      --       -- ((((feq ▸ Eq.refl (S ≠ zero → ℚ)):(S ≠ zero → ℚ) = (a.fst ≠ zero → ℚ)) ▸ S.inv') h'')
+      --       -- ((((feq ▸ Eq.refl (S ≠ zero → ℚ)):(S ≠ zero → ℚ) = (a.fst ≠ zero → ℚ)) ▸ S.inv') h'')
+      --     -- guard_expr (feq ▸ Eq.refl ℚ ▸ Eq.refl (S ≠ zero → ℚ)) =~ (feq ▸ Eq.refl ℚ ▸ Eq.refl (S ≠ zero → ℚ))
+      --     -- exact inv_fn S.sys_of_repr (feq.mpr h'')
+      --     -- exact inv_fn S.sys_of_repr (fun h' => h'' (num_eq_zero' S.sys_of_repr_spec h'))
+      --     simp?
+
+      --   -- intro a h'
+      --   -- apply heq_of_eqRec_eq
+      --   -- have feq : (S ≠ zero) = (a.fst ≠ zero) := sorry
+      --   -- case h₁ =>
+      --   --   -- congr 1
+      --   --   refine' implies_congr _ rfl
+      --   --   apply congrArg (¬·) (propext ⟨num_eq_zero_of_eq_zero' h', num_eq_zero' h'⟩)
+      --   -- case h₂ =>
+      --   --   funext h''
+      --   --   apply EC.sound' eqv.eqv _ (EC.is_member_of_from_elm _ eqv.eqv) _
+      --   --   -- unfold inv_fn
+      --   --   exact inv_fn S.sys_of_repr h''
+      --   --   -- exact inv_fn S.sys_of_repr (fun h' => h'' (num_eq_zero' S.sys_of_repr_spec h'))
+      --   --   simp?
+
+
+      --   -- refine @heq_of_eq _
+
 
     def inv : (Σ'(a : ℚ), a ≠ zero) → ℚ :=
       fun a => a.fst.inv' a.snd
@@ -439,6 +570,22 @@ namespace ℚ
 
     -- the more useful one :
     theorem inv_def' {a : ℚ} {h : a ≠ zero} : ⟨a, h⟩⁻¹ = a.inv' h := rfl
+
+    private theorem _mul_inv_cancel : ∀ (a : ℚ) (h0 : a ≠ zero), a * ⟨a, h0⟩⁻¹ = one := by
+      intro a h0
+      rw [mul_def, inv_def', inv_spec a.sys_of_repr_spec]
+      unfold mul mul_fn mul_fn_fn inv_fn
+      rw [EC.lift_spec a _ a.sys_of_repr_spec,
+        EC.lift_spec _ _ (EC.is_member_of_from_elm _ _)]
+      apply EC.sound
+      unfold mul_fn_fn_fn inv_fn_fn one_repr eqv
+      simp only [mul_one]
+      let ap := a.sys_of_repr
+      apply Or.elim'_spec (c := ℚ_con) (p := (fun x => (ap.fst * x.fst = ap.snd * x.snd))) _ _
+      <;>simp only [mul_neg_right]<;>intro<;>ac_nf
+
+    @[default_instance] instance : Field ℚ where
+      mul_inv_cancel := _mul_inv_cancel
 
   end inv
 
@@ -591,6 +738,8 @@ namespace ℚ
 
     -- @[default_instance] instance : OrderedCommRing' ℚ where
     --   mul_eq_zero := _mul_eq_zero
+
+    @[default_instance] instance : OrderedField ℚ where
 
   end comp
 

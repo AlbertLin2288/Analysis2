@@ -97,6 +97,12 @@ namespace OrderedCommGroup
     rw [←zero_add a, ←zero_add b, ←neg_add c, add_assoc, add_assoc]
     exact add_le_add_left (-c) h
 
+  theorem add_le_add_right_iff {a b c : α} : a + c ≤ b + c ↔ a ≤ b :=
+    ⟨le_of_add_le_add_right, add_le_add_right _⟩
+
+  theorem add_le_add_left_iff {a b c : α} : c + a ≤ c + b ↔ a ≤ b :=
+    ⟨le_of_add_le_add_left, add_le_add_left _⟩
+
   theorem sub_nonneg_of_le {a b : α} : a ≤ b → zero ≤ b - a := by
     intro h
     rw [←add_neg a, sub_eq_add_neg]
@@ -131,6 +137,20 @@ namespace OrderedCommGroup
   theorem neg_lt_neg_iff {a b : α} : -b < -a ↔ a < b :=
     ⟨lt_of_neg_lt_neg, neg_lt_neg_of_lt⟩
 
+  theorem sub_pos_of_lt {a b : α} : a < b → zero < b - a := by
+    intro h
+    rw [←add_neg a, sub_eq_add_neg]
+    exact add_lt_add_right (-a) h
+
+  theorem lt_of_sub_pos {a b : α} : zero < b - a → a < b := by
+    intro h
+    replace h := add_lt_add_right a h
+    rw [zero_add, sub_add_cancel] at h
+    exact h
+
+  theorem sub_pos_iff {a b : α} : zero < b - a ↔ a < b :=
+    ⟨lt_of_sub_pos, sub_pos_of_lt⟩
+
 end OrderedCommGroup
 
 
@@ -147,6 +167,18 @@ namespace OrderedSemiRing
   variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Comp α] [CommMonoid α] [SemiRing α] [OrderedCommMonoid α] [OrderedSemiRing α]
 
   theorem zero_lt_one : (zero : α) < one := lt_of_le_ne zero_le_one zero_ne_one
+
+  theorem mul_le_mul_of_pos_right {a b c : α} : a ≤ b → zero < c → a * c ≤ b * c :=
+    fun h h' => mul_le_mul_of_nonneg_right h (le_of_lt h')
+
+  theorem mul_le_mul_of_pos_left {a b c : α} : a ≤ b → zero < c → c * a ≤ c * b :=
+    fun h h' => mul_le_mul_of_nonneg_left h (le_of_lt h')
+
+  theorem lt_of_mul_lt_mul_pos_left {a b c : α} : c * a < c * b → zero < c → a < b :=
+    fun h h' => byContradiction fun h'' => (not_lt_of_le (mul_le_mul_of_pos_left (le_of_not_lt h'') h')) h
+
+  theorem lt_of_mul_lt_mul_pos_right {a b c : α} : a * c < b * c → zero < c → a < b :=
+    fun h h' => byContradiction fun h'' => (not_lt_of_le (mul_le_mul_of_pos_right (le_of_not_lt h'') h')) h
 
 end OrderedSemiRing
 
@@ -195,5 +227,49 @@ namespace OrderedCommRing
   @[default_instance] instance : OrderedCommSemiRing α := ⟨_mul_le_mul_of_nonneg_right, _zero_le_one⟩
 
 end OrderedCommRing
+
+class OrderedCommRing' (α : Type) [Zero α] [Add α] [One α] [Mul α] [Neg α] [Comp α] [CommMonoid α] [CommSemiRing α] [CommGroup α] [CommRing α]
+  [OrderedCommMonoid α] [OrderedCommGroup α] [OrderedCommRing α] where
+  mul_eq_zero {a b : α} : a * b = zero → a = zero ∨ b = zero -- equivalent to mul_pos, see test2
+
+namespace OrderedCommRing'
+
+
+  open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommGroup CommRing
+  open OrderedMonoid OrderedCommMonoid OrderedSemiRing OrderedCommSemiRing OrderedCommGroup OrderedCommRing
+  variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Neg α] [Comp α] [CommMonoid α] [CommSemiRing α] [CommGroup α] [CommRing α]
+  [OrderedCommMonoid α] [OrderedCommGroup α] [OrderedCommRing α] [OrderedCommRing' α]
+
+  theorem mul_pos {a b : α} : a > zero → b > zero → a * b > zero :=
+    fun ha hb => lt_of_le_ne (mul_nonneg (le_of_lt ha) (le_of_lt hb)) fun h => (mul_eq_zero h.symm).elim (ne_of_lt ha).symm (ne_of_lt hb).symm
+
+  theorem mul_lt_mul_of_pos_right {a b c : α} : a < b → zero < c → a * c < b * c := by
+    intro h h'
+    rw [←sub_pos_iff] at h |-
+    rw [←sub_mul]
+    exact mul_pos h h'
+
+  theorem mul_lt_mul_of_pos_left {a b c : α} : a < b → zero < c → c * a < c * b := by
+    intro h h';simp only [mul_comm];exact mul_lt_mul_of_pos_right h h'
+
+  theorem le_of_mul_le_mul_pos_left {a b c : α} : c * a ≤ c * b → zero < c → a ≤ b :=
+    fun h h' => byContradiction fun h'' => (not_le_of_lt (mul_lt_mul_of_pos_left (lt_of_not_le h'') h')) h
+
+  theorem le_of_mul_le_mul_pos_right {a b c : α} : a * c ≤ b * c → zero < c → a ≤ b := by
+    intro h;simp only [mul_comm _ c] at h;exact le_of_mul_le_mul_pos_left h
+
+  theorem mul_lt_mul_pos_right_iff {a b c : α} : zero < c → (a * c < b * c ↔ a < b) :=
+    fun h => ⟨(lt_of_mul_lt_mul_pos_right · h), (mul_lt_mul_of_pos_right · h)⟩
+
+  theorem mul_lt_mul_pos_left {a b c : α} : zero < c → (c * a < c * b ↔ a < b) :=
+    fun h => ⟨(lt_of_mul_lt_mul_pos_left · h), (mul_lt_mul_of_pos_left · h)⟩
+
+  theorem mul_le_mul_pos_left_iff {a b c : α} : zero < c → (c * a ≤ c * b ↔ a ≤ b) :=
+    fun h => ⟨(le_of_mul_le_mul_pos_left · h), (mul_le_mul_of_pos_left · h)⟩
+
+  theorem mul_le_mul_pos_right_iff {a b c : α} : zero < c → (a * c ≤ b * c ↔ a ≤ b) :=
+    fun h => ⟨(le_of_mul_le_mul_pos_right · h), (mul_le_mul_of_pos_right · h)⟩
+
+end OrderedCommRing'
 
 end my

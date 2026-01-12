@@ -468,7 +468,7 @@ namespace ℤ
       simp only [mul_comm]
       exact mul_left_inj hc
 
-    theorem mul_eq_zero {a b : ℤ} : a * b = zero → a = zero ∨ b = zero := by
+    theorem _mul_eq_zero {a b : ℤ} : a * b = zero → a = zero ∨ b = zero := by
       intro h
       by_cases ha0 : a = zero
       case pos => exact Or.inl ha0
@@ -643,6 +643,9 @@ namespace ℤ
     @[default_instance] instance : OrderedCommRing ℤ where
       mul_nonneg := _mul_nonneg
       _zero_le_one := _zero_le_one
+
+    @[default_instance] instance : OrderedCommRing' ℤ where
+      mul_eq_zero := _mul_eq_zero
 
     section nums
 

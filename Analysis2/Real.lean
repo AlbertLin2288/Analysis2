@@ -224,7 +224,7 @@ namespace ℝ
     def mul_fn_fn : ℚ_cauchy → ℚ_cauchy → ℝ :=
       fun a b => ℝ.mk' (mul_fn_fn_fn a b)
 
-    private theorem mul_respect_aux {s1 s2 : Seq ℚ} (h1 : is_cauchy s1) (h2 : conv_to s2 zero) : conv_to (s1 * s2) zero := by
+    private theorem mul_aux {s1 s2 : Seq ℚ} (h1 : is_cauchy s1) (h2 : conv_to s2 zero) : conv_to (s1 * s2) zero := by
       intro ε hε
       replace ⟨N1, h1⟩ := h1 one zero_lt_one
       let a := abs (s1 N1) + one
@@ -246,7 +246,7 @@ namespace ℝ
       apply EC.sound
       unfold eqv mul_fn_fn_fn at *
       simp only [←mul_neg_right, ←mul_add] at *
-      exact mul_respect_aux a.h h
+      exact mul_aux a.h h
 
     def mul_fn : ℚ_cauchy → ℝ → ℝ :=
       fun a => EquivalentClass.lift (β := ℝ) eqv.eqv (mul_fn_fn a) (mul_fn_respect a)
@@ -258,7 +258,7 @@ namespace ℝ
       apply EC.sound
       unfold eqv mul_fn_fn_fn at *
       rw [←mul_neg_left, ←add_mul, mul_comm _ c.s]
-      exact mul_respect_aux c.h h
+      exact mul_aux c.h h
 
     def mul : ℝ → ℝ → ℝ :=
       EquivalentClass.lift (β := ℝ → ℝ) eqv.eqv mul_fn mul_respect
@@ -658,75 +658,77 @@ namespace ℝ
 
     theorem le_def {a b : ℝ} : (a ≤ b) = a.le b := rfl
 
---     private theorem _add_le_add_left {a b : ℝ} : ∀(c : ℝ), a ≤ b → c + a ≤ c + b := by
---       intro c
---       simp only [le_def, add_def]
---       let ap := a.sys_of_repr
---       let bp := b.sys_of_repr
---       let cp := c.sys_of_repr
---       unfold le le_fn le_fn_fn add add_fn add_fn_fn
---       intro h
---       replace h : ap.fst * bp.snd ≤ ap.snd * bp.fst := h
---       repeat first
---       | rw [EC.lift_spec _ _ a.sys_of_repr_spec]
---       | rw [EC.lift_spec _ _ b.sys_of_repr_spec]
---       | rw [EC.lift_spec _ _ c.sys_of_repr_spec]
---       | rw [EC.lift_spec _ (add_fn_fn_fn cp ap) (EC.is_member_of_from_elm _ eqv.eqv)]
---       | rw [EC.lift_spec _ (add_fn_fn_fn cp bp) (EC.is_member_of_from_elm _ eqv.eqv)]
---       unfold add_fn_fn_fn
---       simp only [mul_add, add_mul]
---       ac_nf
---       simp only [add_le_add_right_iff, ←mul_assoc, mul_le_mul_pos_right_iff cp.h]
---       ac_nf at h |-
+    private theorem _add_le_add_left {a b : ℝ} : ∀(c : ℝ), a ≤ b → c + a ≤ c + b := by
+      intro c
+      simp only [le_def, add_def]
+      let ap := a.sys_of_repr
+      let bp := b.sys_of_repr
+      let cp := c.sys_of_repr
+      unfold le le_fn le_fn_fn add add_fn add_fn_fn
+      intro h
+      replace h : _is_nonneg (bp.s + -ap.s) := h
+      repeat first
+      | rw [EC.lift_spec _ _ a.sys_of_repr_spec]
+      | rw [EC.lift_spec _ _ b.sys_of_repr_spec]
+      | rw [EC.lift_spec _ _ c.sys_of_repr_spec]
+      | rw [EC.lift_spec _ (add_fn_fn_fn cp ap) (EC.is_member_of_from_elm _ eqv.eqv)]
+      | rw [EC.lift_spec _ (add_fn_fn_fn cp bp) (EC.is_member_of_from_elm _ eqv.eqv)]
+      unfold add_fn_fn_fn
+      simp only [neg_sum, ←add_assoc, add_comm _ bp.s, add_sub_cancel]
+      exact h
 
---     @[default_instance] instance : OrderedCommMonoid ℝ where
---       _add_le_add_left := _add_le_add_left
+    @[default_instance] instance : OrderedCommMonoid ℝ where
+      _add_le_add_left := _add_le_add_left
 
---     @[default_instance] instance : OrderedCommGroup ℝ where
+    @[default_instance] instance : OrderedCommGroup ℝ where
 
---     private theorem _mul_nonneg {a b : ℝ} : zero ≤ a → zero ≤ b → zero ≤ a * b := by
---       simp [le_def, mul_def]
---       let ap := a.sys_of_repr
---       let bp := b.sys_of_repr
---       unfold le le_fn mul mul_fn mul_fn_fn
---       repeat first
---       | rw [EC.lift_spec _ _ a.sys_of_repr_spec]
---       | rw [EC.lift_spec _ _ b.sys_of_repr_spec]
---       | rw [EC.lift_spec _ _ zero_is_member_zero]
---       | rw [EC.lift_spec _ (mul_fn_fn_fn ap bp) (EC.is_member_of_from_elm _ eqv.eqv)]
---       unfold le_fn_fn mul_fn_fn_fn zero_repr
---       simp only [zero_mul, one_mul]
---       exact mul_nonneg
+    private theorem _mul_nonneg {a b : ℝ} : zero ≤ a → zero ≤ b → zero ≤ a * b := by
+      simp [le_def, mul_def]
+      let ap := a.sys_of_repr
+      let bp := b.sys_of_repr
+      unfold le le_fn mul mul_fn mul_fn_fn
+      repeat first
+      | rw [EC.lift_spec _ _ a.sys_of_repr_spec]
+      | rw [EC.lift_spec _ _ b.sys_of_repr_spec]
+      | rw [EC.lift_spec _ _ zero_is_member_zero]
+      | rw [EC.lift_spec _ (mul_fn_fn_fn ap bp) (EC.is_member_of_from_elm _ eqv.eqv)]
+      unfold le_fn_fn mul_fn_fn_fn zero_repr
+      simp only [sub_zero]
+      show _is_nonneg ap.s → _is_nonneg bp.s → _is_nonneg (ap.s*bp.s)
+      intro h h'
+      by_cases h0 : conv_to ap.s zero
+      case pos =>
+        exact Or.inl (mul_comm bp.s _ ▸ mul_aux bp.h h0)
+      case neg =>
+        by_cases h0' : conv_to bp.s zero
+        case pos =>
+          exact Or.inl (mul_aux ap.h h0')
+        case neg =>
+          have ⟨N1, hN1⟩ := h.resolve_left h0
+          have ⟨N2, hN2⟩ := h'.resolve_left h0'
+          let N := max N1 N2
+          refine' Or.inr ⟨N, _⟩
+          intro n hn
+          simp only [Seq.mul_def]
+          exact mul_nonneg (hN1 n (le_of_le_le max_ge_fst hn)) (hN2 n (le_of_le_le max_ge_snd hn))
 
---     private theorem _zero_le_one : zero ≤ one := by
---       rw [le_def]
---       unfold le le_fn le_fn_fn
---       rw [EC.lift_spec _ _ zero_is_member_zero]
---       rw [EC.lift_spec _ _ one_is_member_one]
---       unfold zero_repr one_repr
---       simp only [mul_one]
---       exact zero_le_one
+    private theorem _zero_le_one : zero ≤ one := by
+      rw [le_def]
+      unfold le le_fn le_fn_fn
+      rw [EC.lift_spec _ _ zero_is_member_zero]
+      rw [EC.lift_spec _ _ one_is_member_one]
+      unfold zero_repr one_repr
+      simp only [sub_zero]
+      refine' Or.inr ⟨zero, _⟩
+      intros
+      exact zero_le_one
 
 
---     @[default_instance] instance : OrderedCommRing ℝ where
---       _mul_nonneg := _mul_nonneg
---       _zero_le_one := _zero_le_one
+    @[default_instance] instance : OrderedCommRing ℝ where
+      _mul_nonneg := _mul_nonneg
+      _zero_le_one := _zero_le_one
 
---     -- private theorem _mul_eq_zero {a b : ℝ} : a * b = zero → a = zero ∨ b = zero := by
---     --   rw [mul_def]
---     --   unfold mul mul_fn mul_fn_fn EC.lift mul_fn_fn_fn
---     --   intro h
---     --   replace h := EC.sound_inv eqv.eqv h
---     --   unfold eqv zero_repr at h
---     --   simp only [mul_zero, mul_one] at h
---     --   exact (mul_eq_zero h).elim
---     --     (fun h' => Or.inl (num_eq_zero' a.sys_of_repr_spec h'))
---     --     (fun h' => Or.inr (num_eq_zero' b.sys_of_repr_spec h'))
-
---     -- @[default_instance] instance : OrderedCommRing' ℝ where
---     --   mul_eq_zero := _mul_eq_zero
-
---     @[default_instance] instance : OrderedField ℝ where
+    @[default_instance] instance : OrderedField ℝ where
 
   end comp
 

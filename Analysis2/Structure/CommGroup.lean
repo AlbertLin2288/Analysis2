@@ -35,6 +35,9 @@ namespace CommGroup
   theorem neg_zero : (-zero : α) = zero := by
     rw [← zero_add (-zero), add_neg]
 
+  theorem sub_zero (a : α) : a - zero = a := by
+    rw [neg_zero, add_zero]
+
   theorem neg_nonzero {a : α} : a ≠ zero → -a ≠ zero :=
     fun h h' => h (neg_inj ((neg_zero (α:=α)).substr h'))
 

@@ -349,7 +349,7 @@ namespace ℝ
 
   section inv
 
-    private theorem inv_aux {s : Seq ℚ} (h : is_cauchy s) (h' : ¬ conv_to s zero) :
+    theorem inv_aux {s : Seq ℚ} (h : is_cauchy s) (h' : ¬ conv_to s zero) :
       ∃(N : ℕ) (l : ℚ), zero < l ∧ ((∀(n : ℕ), N ≤ n → l ≤ s n) ∨ (∀(n : ℕ), N ≤ n → l ≤ -(s n))) := by
         apply byContradiction
         intro hc
@@ -382,6 +382,13 @@ namespace ℝ
           have h'' : s N2 - s n ≥ ε2 := ε21 ▸ le_of_add_le_lt h' (neg_lt_neg_of_lt hc)
           rw [abs_of_pos (lt_of_lt_le hε2 h'')] at h
           exact (not_le_of_lt h) h''
+
+    theorem inv_aux' {s : Seq ℚ} (h : is_cauchy s) (h' : ¬ conv_to s zero) :
+      ∃(N : ℕ) (l : ℚ), zero < l ∧ ∀(n : ℕ), N ≤ n → l ≤ abs (s n) :=
+      ⟨(inv_aux h h').choose, (inv_aux h h').choose_spec.choose, (inv_aux h h').choose_spec.choose_spec.left,
+      (inv_aux h h').choose_spec.choose_spec.right.elim
+        (fun hl n hn => le_of_le_eq (hl n hn) (abs_of_nonneg (le_of_lt_le ((inv_aux h h').choose_spec.choose_spec.left) (hl n hn))).symm)
+        (fun hl n hn => le_of_le_eq (hl n hn) (abs_of_neg (neg_pos_iff_neg.mp (lt_of_lt_le ((inv_aux h h').choose_spec.choose_spec.left) (hl n hn)))).symm)⟩
 
     def inv_fn_fn (a : ℚ_cauchy) (h : ¬conv_to a.s zero) : ℚ_cauchy :=
       have hv := inv_aux a.h h
@@ -481,87 +488,175 @@ namespace ℝ
 
   end inv
 
---   section comp
+  section comp
+
+    -- def _is_nonneg : ℚ_cauchy → Prop :=
+    --   fun a => conv_to a.s zero ∨ ∃(N : ℕ), ∀(n : ℕ), N ≤ n → zero ≤ a.s n
+    -- Only meaningful if seq is cauchy
+    def _is_nonneg : Seq ℚ → Prop :=
+      fun s => conv_to s zero ∨ ∃(N : ℕ), ∀(n : ℕ), N ≤ n → zero ≤ s n
 
 
---     def le_fn_fn : ℚ_cauchy → ℚ_cauchy → Prop :=
---       fun a b => a.fst * b.snd ≤ a.snd * b.fst
+    def le_fn_fn : ℚ_cauchy → ℚ_cauchy → Prop :=
+      fun a b => _is_nonneg (b.s - a.s)
 
---     private theorem le_fn_respect (a : ℚ_cauchy) : ∀ (b c : ℚ_cauchy), eqv b c → le_fn_fn a b = le_fn_fn a c := by
---       intro b c h
---       have h' {a b c : ℚ_cauchy} : eqv b c → le_fn_fn a b → le_fn_fn a c := by
---         unfold eqv le_fn_fn
---         intro h h'
---         rw [←mul_le_mul_pos_right_iff c.h, mul_assoc a.snd, h] at h'
---         rw [←mul_le_mul_pos_right_iff b.h]
---         ac_nf at *
---       exact propext ⟨h' h, h' h.symm⟩
+    private theorem le_aux {s1 s2 : Seq ℚ} (h1 : is_cauchy s1) (h : conv_to (s1 - s2) zero) : _is_nonneg s1 → _is_nonneg s2 := by
+      intro h'
+      by_cases h'' : conv_to s1 zero
+      case pos =>
+        replace h := neg_sub s1 _ ▸ conv_to_neg_of_neg h
+        replace h := conv_to_sum_of_sum h h''
+        rw [add_assoc, neg_add, add_zero, add_zero, neg_zero] at h
+        exact Or.inl h
+      case neg =>
+        -- have c21 := is_cauchy_of_sum h2 (is_cauchy_of_neg h1)
+        have ⟨N1, l, hl, hN1⟩ := inv_aux h1 h''
+        replace hN1 := hN1.resolve_right (by
+          intro hc
+          have ⟨N2, hN2⟩ := h'.resolve_left h''
+          let N := max N1 N2
+          replace hc := hc N max_ge_fst
+          replace hN2 := neg_nonneg_is_nonpos (hN2 N max_ge_snd)
+          exact not_le_of_lt (lt_of_lt_le hl hc) hN2
+        )
+        replace ⟨N2, hN2⟩ := h l hl
+        let N := max N1 N2
+        refine' Or.inr ⟨N, _⟩
+        intro n hn
+        replace hN1 := hN1 n (le_of_le_le max_ge_fst hn)
+        replace hN2 := lt_of_le_lt (self_le_abs_self _) (sub_zero _ (α:=ℚ) ▸ hN2 n (le_of_le_le max_ge_snd hn))
+        rw [Seq.add_def, Seq.neg_def] at *
+        replace hN1 := (le_of_lt_le hN2 hN1)
+        simp only at hN1 |-
+        apply le_of_add_le_add_left (c:=(s1 n))
+        rw [add_zero]
+        exact (le_add_of_sub_right_le hN1)
 
---     def le_fn : ℚ_cauchy → ℝ → Prop :=
---       fun a => EquivalentClass.lift eqv.eqv (le_fn_fn a) (le_fn_respect a)
 
---     private theorem le_respect : ∀ (a b : ℚ_cauchy), eqv a b → le_fn a = le_fn b := by
---       intro a b h
---       funext c
---       have h' {a b : ℚ_cauchy} {c : ℝ} : eqv a b → le_fn a c → le_fn b c := by
---         intro h h'
---         unfold eqv le_fn at *
---         repeat rw [EC.lift_spec _ _ (EC.sys_of_repr_spec _)] at *
---         unfold le_fn_fn at *
---         rw [←mul_le_mul_pos_left_iff a.h, ←mul_assoc, ← h]
---         rw [←mul_le_mul_pos_left_iff b.h] at h'
---         ac_nf at |- h'
---       exact propext ⟨h' h, h' h.symm⟩
+    private theorem le_fn_respect (a : ℚ_cauchy) : ∀ (b c : ℚ_cauchy), eqv b c → le_fn_fn a b = le_fn_fn a c := by
+      intro b c h
+      have thm1 {a b c : ℚ_cauchy} (h : eqv b c) : le_fn_fn a b → le_fn_fn a c := by
+        unfold eqv le_fn_fn at *
+        rw [←add_zero b.s, ←neg_add a.s, ←add_assoc, add_assoc, ←neg_sub c.s] at h
+        exact le_aux (is_cauchy_of_sum b.h (is_cauchy_of_neg a.h)) h
+      exact propext ⟨thm1 h, thm1 h.symm⟩
 
---     def le : ℝ → ℝ → Prop :=
---       EquivalentClass.lift (β := ℝ → Prop) eqv.eqv le_fn le_respect
+    def le_fn : ℚ_cauchy → ℝ → Prop :=
+      fun a => EquivalentClass.lift eqv.eqv (le_fn_fn a) (le_fn_respect a)
 
---     private theorem _le_refl : ∀ (a : ℝ), a.le a := by
---       intro a
---       unfold le le_fn le_fn_fn EC.lift
---       simp only [mul_comm]
---       exact le_refl _
+    private theorem le_respect : ∀ (a b : ℚ_cauchy), eqv a b → le_fn a = le_fn b := by
+      intro a b h
+      funext c
+      have thm1 {a b : ℚ_cauchy} {c : ℝ} : eqv a b → le_fn a c → le_fn b c := by
+        intro h h'
+        unfold eqv le_fn at *
+        repeat rw [EC.lift_spec _ _ (EC.sys_of_repr_spec _)] at *
+        unfold le_fn_fn at *
+        generalize c.sys_of_repr = c at *
+        replace h := conv_to_neg_of_neg h
+        rw [neg_sub, neg_zero, ←add_zero b.s, ←neg_add c.s, ←add_assoc, add_assoc] at h
+        rw [add_comm, ←neg_sub _ b.s] at h
+        exact le_aux (is_cauchy_of_sum c.h (is_cauchy_of_neg a.h)) h h'
 
---     private theorem _le_trans : ∀ (a b c : ℝ), a.le b → b.le c → a.le c := by
---       intro a b c
---       unfold le le_fn le_fn_fn EC.lift
---       simp only
---       generalize a.sys_of_repr = a
---       generalize b.sys_of_repr = b
---       generalize c.sys_of_repr = c
---       intro h h'
---       rw [←mul_le_mul_pos_right_iff b.h]
---       rw [←mul_le_mul_pos_right_iff c.h] at h
---       rw [←mul_le_mul_pos_right_iff a.h] at h'
---       ac_nf at *
---       exact le_trans _ _ _ h h'
+      exact propext ⟨thm1 h, thm1 h.symm⟩
 
---     private theorem _le_antisymm : ∀ (a b : ℝ), a.le b → b.le a → a = b := by
---       intro a b
---       unfold le le_fn le_fn_fn EC.lift
---       intro h h'
---       apply EC.sound' eqv.eqv a.sys_of_repr_spec b.sys_of_repr_spec
---       simp only [eqv] at *
---       ac_nf at *
---       exact le_antisymm _ _ h h'
+    def le : ℝ → ℝ → Prop :=
+      EquivalentClass.lift (β := ℝ → Prop) eqv.eqv le_fn le_respect
 
---     private theorem _le_total : ∀ (a b : ℝ), a.le b ∨ b.le a := by
---       intro a b
---       unfold le le_fn le_fn_fn EC.lift
---       simp only
---       generalize a.sys_of_repr = a
---       generalize b.sys_of_repr = b
---       ac_nf
---       exact le_total _ _
+    private theorem _le_refl : ∀ (a : ℝ), a.le a := by
+      intro a
+      unfold le le_fn le_fn_fn EC.lift
+      simp only [add_neg]
+      apply Or.inl
+      exact conv_to_of_const zero
 
---     @[default_instance] instance : Comp ℝ where
---       le := le
---       le_refl := _le_refl
---       le_trans := _le_trans
---       le_antisymm := _le_antisymm
---       le_total := _le_total
+    private theorem _le_trans : ∀ (a b c : ℝ), a.le b → b.le c → a.le c := by
+      intro a b c
+      unfold le le_fn le_fn_fn EC.lift
+      simp only
+      generalize a.sys_of_repr = a
+      generalize b.sys_of_repr = b
+      generalize c.sys_of_repr = c
+      intro h h'
+      by_cases h0 : conv_to (b.s - a.s) zero
+      case pos =>
+        replace h0 := conv_to_neg_of_neg h0
+        rw [neg_sum, neg_zero, neg_neg, ←add_zero (-b.s), ←add_neg c.s, ←add_assoc] at h0
+        rw [add_assoc, add_comm (-b.s), add_comm (-c.s), ←neg_sub c.s] at h0
+        exact le_aux (is_cauchy_of_sum c.h (is_cauchy_of_neg b.h)) h0 h'
+      case neg =>
+        by_cases h0' : conv_to (c.s - b.s) zero
+        case pos =>
+          replace h0' := conv_to_neg_of_neg h0'
+          rw [neg_sub, neg_zero, ←add_zero (b.s), ←neg_add a.s, ←add_assoc] at h0'
+          rw [add_assoc, ←neg_sub c.s] at h0'
+          exact le_aux (is_cauchy_of_sum b.h (is_cauchy_of_neg a.h)) h0' h
+        case neg =>
+          replace ⟨N1, hN1⟩ := h.resolve_left h0
+          replace ⟨N2, hN2⟩ := h'.resolve_left h0'
+          let N := max N1 N2
+          refine' Or.inr ⟨N, _⟩
+          intro n hn
+          replace hN1 := hN1 n (le_of_le_le max_ge_fst hn)
+          replace hN2 := hN2 n (le_of_le_le max_ge_snd hn)
+          have hN := nonneg_add_nonneg_is_nonneg hN2 hN1
+          simp only [Seq.add_def, Seq.neg_def, ←add_assoc, sub_add_cancel] at hN
+          exact hN
 
---     theorem le_def {a b : ℝ} : (a ≤ b) = a.le b := rfl
+    private theorem _le_antisymm : ∀ (a b : ℝ), a.le b → b.le a → a = b := by
+      intro a b
+      unfold le le_fn le_fn_fn EC.lift
+      intro h' h
+      apply EC.sound' eqv.eqv a.sys_of_repr_spec b.sys_of_repr_spec
+      simp only [eqv] at *
+      generalize a.sys_of_repr = a at *
+      generalize b.sys_of_repr = b at *
+      refine' (em (conv_to (a.s - b.s) zero)).elim id _
+      intro h0
+      have h0' : ¬conv_to (b.s - a.s) zero := by
+        intro h0';rw [←neg_sub, ←neg_zero] at h0;exact h0 (conv_to_neg_of_neg h0')
+      replace ⟨N1, hN1⟩ := h.resolve_left h0
+      replace ⟨N2, hN2⟩ := h'.resolve_left h0'
+      let N := max N1 N2
+      intro ε hε
+      exists N
+      intro n hn
+      replace hN1 := hN1 n (le_of_le_le max_ge_fst hn)
+      replace hN2 := neg_sub a.s b.s ▸ hN2 n (le_of_le_le max_ge_snd hn)
+      rw [←le_antisymm _ _ hN1 (neg_nonneg_iff_nonpos.mp hN2),sub_zero,abs_of_zero]
+      exact hε
+
+    private theorem _le_total : ∀ (a b : ℝ), a.le b ∨ b.le a := by
+      intro a b
+      unfold le le_fn le_fn_fn EC.lift
+      simp only
+      generalize a.sys_of_repr = a
+      generalize b.sys_of_repr = b
+      have thm1 {s : Seq ℚ} (hs : is_cauchy s) : _is_nonneg s ∨ _is_nonneg (-s) := by
+        by_cases h0 : conv_to s zero
+        case pos => exact Or.inl (Or.inl h0)
+        case neg =>
+          have ⟨N, l, hl, hnl⟩ := inv_aux hs h0
+          have thm2 {s : Seq ℚ} (hs : is_cauchy s) (N : ℕ) (l : ℚ) (hl : zero < l)
+            (hnl : ∀ (n : ℕ), N ≤ n → l ≤ s n) : _is_nonneg s := by
+              refine' Or.inr ⟨N, _⟩
+              intro n hn
+              exact le_of_lt_le hl (hnl n hn)
+          cases hnl
+          case inl hnl =>
+            exact Or.inl (thm2 hs N l hl hnl)
+          case inr hnl =>
+            exact Or.inr (thm2 (is_cauchy_of_neg hs) N l hl hnl)
+      exact (thm1 (is_cauchy_of_sum b.h (is_cauchy_of_neg a.h))).elim Or.inl (fun h => Or.inr (neg_sub b.s a.s ▸ h))
+
+    @[default_instance] instance : Comp ℝ where
+      le := le
+      le_refl := _le_refl
+      le_trans := _le_trans
+      le_antisymm := _le_antisymm
+      le_total := _le_total
+
+    theorem le_def {a b : ℝ} : (a ≤ b) = a.le b := rfl
 
 --     private theorem _add_le_add_left {a b : ℝ} : ∀(c : ℝ), a ≤ b → c + a ≤ c + b := by
 --       intro c
@@ -633,7 +728,7 @@ namespace ℝ
 
 --     @[default_instance] instance : OrderedField ℝ where
 
---   end comp
+  end comp
 
 
 end ℝ

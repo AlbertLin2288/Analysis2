@@ -23,6 +23,11 @@ def contrapos {p q : Prop} : (p → q) → (¬q → ¬p) :=
 def contrapos' {p q : Prop} : (¬p → ¬q) → (q → p) :=
   fun h h' => (em p).resolve_right (h · h')
 
+-- @[reducible] def cst.{u, v, w} {a : Sort u} {b : Sort v} {c : Sort w} : (b → c) → b → (a → c) := fun x y _ => x y
+
+-- @[reducible] def cst'.{u, v} {a : Sort u} {b : Sort v} {c : Prop} : (b → c) → b → (a → c) := fun x y _ => x y
+
+-- @[reducible] def cst'.{u, v} {a : Sort u} {b : Sort v} : b → (a → b) := fun x _ => x
 
 
   -- def e2.{u} {a b : Prop} {c : Sort u} (h : a ∨ b) (f : a → c) (f' : b → c) :=
@@ -62,7 +67,7 @@ def contrapos' {p q : Prop} : (¬p → ¬q) → (q → p) :=
   --   ⟨x.choose, x.choose_spec x.choose⟩
   -- def er.{u} {a b : Prop} {c : Sort u} (h : a ∨ b) (f : a → c) (f' : b → c)
 
-#check Sort 0
+-- #check Sort 0
 
   -- set_option pp.proofs true
   -- def e2'.{u} {a b : Prop} {c : Sort u} {h : a ∨ b} {f : a → c} {f' : b → c} {p : c → Prop} (ha : (ha' : a) → p (f ha')) (hb : (hb' : b) → p (f' hb')) : p (e2 h f f') :=

@@ -1,10 +1,5 @@
-import Analysis2.Operator
-import Analysis2.Comp
-import Analysis2.Structure
-import Analysis2.CompStructure
-import Analysis2.EquivalentClass
-import Analysis2.Nat
 import Analysis2.Int
+import Analysis2.CompStructure.OrderedField
 
 noncomputable section
 namespace my
@@ -84,22 +79,22 @@ namespace ℚ
     def _one : ℚ := mk' one_repr
     @[default_instance] instance : One ℚ := ⟨_one⟩
     theorem one_is_member_one : one.is_member one_repr := EC.is_member_of_from_elm _ eqv.eqv
-    def two_repr : ℚ_con := ⟨ℤ.two, one, zero_lt_one⟩
-    def two : ℚ := mk' two_repr
-    theorem two_is_member_two : two.is_member two_repr := EC.is_member_of_from_elm _ eqv.eqv
-    def three_repr : ℚ_con := ⟨ℤ.three, one, zero_lt_one⟩
-    def three : ℚ := mk' three_repr
-    theorem three_is_member_three : three.is_member three_repr := EC.is_member_of_from_elm _ eqv.eqv
+    -- def two_repr : ℚ_con := ⟨ℤ.two, one, zero_lt_one⟩
+    -- def two : ℚ := mk' two_repr
+    -- theorem two_is_member_two : two.is_member two_repr := EC.is_member_of_from_elm _ eqv.eqv
+    -- def three_repr : ℚ_con := ⟨ℤ.three, one, zero_lt_one⟩
+    -- def three : ℚ := mk' three_repr
+    -- theorem three_is_member_three : three.is_member three_repr := EC.is_member_of_from_elm _ eqv.eqv
 
-    def neg_one_repr : ℚ_con := ⟨ℤ.neg_one, one, zero_lt_one⟩
-    def neg_one : ℚ := mk' neg_one_repr
-    theorem neg_one_is_member_neg_one : neg_one.is_member neg_one_repr := EC.is_member_of_from_elm _ eqv.eqv
-    def neg_two_repr : ℚ_con := ⟨ℤ.neg_two, one, zero_lt_one⟩
-    def neg_two : ℚ := mk' neg_two_repr
-    theorem neg_two_is_member_neg_two : neg_two.is_member neg_two_repr := EC.is_member_of_from_elm _ eqv.eqv
-    def neg_three_repr : ℚ_con := ⟨ℤ.neg_three, one, zero_lt_one⟩
-    def neg_three : ℚ := mk' neg_three_repr
-    theorem neg_three_is_member_neg_three : neg_three.is_member neg_three_repr := EC.is_member_of_from_elm _ eqv.eqv
+    -- def neg_one_repr : ℚ_con := ⟨ℤ.neg_one, one, zero_lt_one⟩
+    -- def neg_one : ℚ := mk' neg_one_repr
+    -- theorem neg_one_is_member_neg_one : neg_one.is_member neg_one_repr := EC.is_member_of_from_elm _ eqv.eqv
+    -- def neg_two_repr : ℚ_con := ⟨ℤ.neg_two, one, zero_lt_one⟩
+    -- def neg_two : ℚ := mk' neg_two_repr
+    -- theorem neg_two_is_member_neg_two : neg_two.is_member neg_two_repr := EC.is_member_of_from_elm _ eqv.eqv
+    -- def neg_three_repr : ℚ_con := ⟨ℤ.neg_three, one, zero_lt_one⟩
+    -- def neg_three : ℚ := mk' neg_three_repr
+    -- theorem neg_three_is_member_neg_three : neg_three.is_member neg_three_repr := EC.is_member_of_from_elm _ eqv.eqv
 
   end nums
 

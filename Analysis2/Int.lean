@@ -1,8 +1,5 @@
-import Analysis2.Operator
-import Analysis2.Structure
-import Analysis2.Comp
-import Analysis2.CompStructure
 import Analysis2.EquivalentClass
+import Analysis2.CompStructure.OrderedCommRing
 import Analysis2.Nat
 
 noncomputable section
@@ -74,46 +71,46 @@ namespace ℤ
     def _one : ℤ := ℤ.mk' one_repr
     @[default_instance] instance : One ℤ := ⟨_one⟩
     theorem one_is_member_one : one.is_member one_repr := EquivalentClass.is_member_of_from_elm one_repr eqv.eqv
-    def two_repr : ℕ_pair := ⟨ℕ.two, zero⟩
-    def two : ℤ := ℤ.mk' two_repr
-    theorem two_is_member_two : two.is_member two_repr := EquivalentClass.is_member_of_from_elm two_repr eqv.eqv
-    def three_repr : ℕ_pair := ⟨ℕ.three, zero⟩
-    def three : ℤ := ℤ.mk' three_repr
-    theorem three_is_member_three : three.is_member three_repr := EquivalentClass.is_member_of_from_elm three_repr eqv.eqv
-    def four_repr : ℕ_pair := ⟨ℕ.four, zero⟩
-    def four : ℤ := ℤ.mk' four_repr
-    theorem four_is_member_four : four.is_member four_repr := EquivalentClass.is_member_of_from_elm four_repr eqv.eqv
-    def five_repr : ℕ_pair := ⟨ℕ.five, zero⟩
-    def five : ℤ := ℤ.mk' five_repr
-    theorem five_is_member_five : five.is_member five_repr := EquivalentClass.is_member_of_from_elm five_repr eqv.eqv
-    def six_repr : ℕ_pair := ⟨ℕ.six, zero⟩
-    def six : ℤ := ℤ.mk' six_repr
-    theorem six_is_member_six : six.is_member six_repr := EquivalentClass.is_member_of_from_elm six_repr eqv.eqv
-    def seven_repr : ℕ_pair := ⟨ℕ.seven, zero⟩
-    def seven : ℤ := ℤ.mk' seven_repr
-    theorem seven_is_member_seven : seven.is_member seven_repr := EquivalentClass.is_member_of_from_elm seven_repr eqv.eqv
+    -- def two_repr : ℕ_pair := ⟨ℕ.two, zero⟩
+    -- def two : ℤ := ℤ.mk' two_repr
+    -- theorem two_is_member_two : two.is_member two_repr := EquivalentClass.is_member_of_from_elm two_repr eqv.eqv
+    -- def three_repr : ℕ_pair := ⟨ℕ.three, zero⟩
+    -- def three : ℤ := ℤ.mk' three_repr
+    -- theorem three_is_member_three : three.is_member three_repr := EquivalentClass.is_member_of_from_elm three_repr eqv.eqv
+    -- def four_repr : ℕ_pair := ⟨ℕ.four, zero⟩
+    -- def four : ℤ := ℤ.mk' four_repr
+    -- theorem four_is_member_four : four.is_member four_repr := EquivalentClass.is_member_of_from_elm four_repr eqv.eqv
+    -- def five_repr : ℕ_pair := ⟨ℕ.five, zero⟩
+    -- def five : ℤ := ℤ.mk' five_repr
+    -- theorem five_is_member_five : five.is_member five_repr := EquivalentClass.is_member_of_from_elm five_repr eqv.eqv
+    -- def six_repr : ℕ_pair := ⟨ℕ.six, zero⟩
+    -- def six : ℤ := ℤ.mk' six_repr
+    -- theorem six_is_member_six : six.is_member six_repr := EquivalentClass.is_member_of_from_elm six_repr eqv.eqv
+    -- def seven_repr : ℕ_pair := ⟨ℕ.seven, zero⟩
+    -- def seven : ℤ := ℤ.mk' seven_repr
+    -- theorem seven_is_member_seven : seven.is_member seven_repr := EquivalentClass.is_member_of_from_elm seven_repr eqv.eqv
 
-    def neg_one_repr : ℕ_pair := ⟨zero, one⟩
-    def neg_one : ℤ := ℤ.mk' neg_one_repr
-    theorem neg_one_is_member_neg_one : neg_one.is_member neg_one_repr := EquivalentClass.is_member_of_from_elm neg_one_repr eqv.eqv
-    def neg_two_repr : ℕ_pair := ⟨zero, ℕ.two⟩
-    def neg_two : ℤ := ℤ.mk' neg_two_repr
-    theorem neg_two_is_member_neg_two : neg_two.is_member neg_two_repr := EquivalentClass.is_member_of_from_elm neg_two_repr eqv.eqv
-    def neg_three_repr : ℕ_pair := ⟨zero, ℕ.three⟩
-    def neg_three : ℤ := ℤ.mk' neg_three_repr
-    theorem neg_three_is_member_neg_three : neg_three.is_member neg_three_repr := EquivalentClass.is_member_of_from_elm neg_three_repr eqv.eqv
-    def neg_four_repr : ℕ_pair := ⟨zero, ℕ.four⟩
-    def neg_four : ℤ := ℤ.mk' neg_four_repr
-    theorem neg_four_is_member_neg_four : neg_four.is_member neg_four_repr := EquivalentClass.is_member_of_from_elm neg_four_repr eqv.eqv
-    def neg_five_repr : ℕ_pair := ⟨zero, ℕ.five⟩
-    def neg_five : ℤ := ℤ.mk' neg_five_repr
-    theorem neg_five_is_member_neg_five : neg_five.is_member neg_five_repr := EquivalentClass.is_member_of_from_elm neg_five_repr eqv.eqv
-    def neg_six_repr : ℕ_pair := ⟨zero, ℕ.six⟩
-    def neg_six : ℤ := ℤ.mk' neg_six_repr
-    theorem neg_six_is_member_neg_six : neg_six.is_member neg_six_repr := EquivalentClass.is_member_of_from_elm neg_six_repr eqv.eqv
-    def neg_seven_repr : ℕ_pair := ⟨zero, ℕ.seven⟩
-    def neg_seven : ℤ := ℤ.mk' neg_seven_repr
-    theorem neg_seven_is_member_neg_seven : neg_seven.is_member neg_seven_repr := EquivalentClass.is_member_of_from_elm neg_seven_repr eqv.eqv
+    -- def neg_one_repr : ℕ_pair := ⟨zero, one⟩
+    -- def neg_one : ℤ := ℤ.mk' neg_one_repr
+    -- theorem neg_one_is_member_neg_one : neg_one.is_member neg_one_repr := EquivalentClass.is_member_of_from_elm neg_one_repr eqv.eqv
+    -- def neg_two_repr : ℕ_pair := ⟨zero, ℕ.two⟩
+    -- def neg_two : ℤ := ℤ.mk' neg_two_repr
+    -- theorem neg_two_is_member_neg_two : neg_two.is_member neg_two_repr := EquivalentClass.is_member_of_from_elm neg_two_repr eqv.eqv
+    -- def neg_three_repr : ℕ_pair := ⟨zero, ℕ.three⟩
+    -- def neg_three : ℤ := ℤ.mk' neg_three_repr
+    -- theorem neg_three_is_member_neg_three : neg_three.is_member neg_three_repr := EquivalentClass.is_member_of_from_elm neg_three_repr eqv.eqv
+    -- def neg_four_repr : ℕ_pair := ⟨zero, ℕ.four⟩
+    -- def neg_four : ℤ := ℤ.mk' neg_four_repr
+    -- theorem neg_four_is_member_neg_four : neg_four.is_member neg_four_repr := EquivalentClass.is_member_of_from_elm neg_four_repr eqv.eqv
+    -- def neg_five_repr : ℕ_pair := ⟨zero, ℕ.five⟩
+    -- def neg_five : ℤ := ℤ.mk' neg_five_repr
+    -- theorem neg_five_is_member_neg_five : neg_five.is_member neg_five_repr := EquivalentClass.is_member_of_from_elm neg_five_repr eqv.eqv
+    -- def neg_six_repr : ℕ_pair := ⟨zero, ℕ.six⟩
+    -- def neg_six : ℤ := ℤ.mk' neg_six_repr
+    -- theorem neg_six_is_member_neg_six : neg_six.is_member neg_six_repr := EquivalentClass.is_member_of_from_elm neg_six_repr eqv.eqv
+    -- def neg_seven_repr : ℕ_pair := ⟨zero, ℕ.seven⟩
+    -- def neg_seven : ℤ := ℤ.mk' neg_seven_repr
+    -- theorem neg_seven_is_member_neg_seven : neg_seven.is_member neg_seven_repr := EquivalentClass.is_member_of_from_elm neg_seven_repr eqv.eqv
 
 
 

@@ -1,7 +1,4 @@
-import Analysis2.Operator
-import Analysis2.Structure
-import Analysis2.Comp
-import Analysis2.CompStructure
+import Analysis2.CompStructure.OrderedCommSemiRing
 noncomputable section
 namespace my
 open Classical
@@ -36,13 +33,14 @@ namespace ℕ
       @[default_instance] instance : One ℕ := ⟨_one⟩
       theorem one_def : one = _one := rfl
 
-      def two : ℕ := one.succ
-      def three : ℕ := two.succ
-      def four : ℕ := three.succ
-      def five : ℕ := four.succ
-      def six : ℕ := five.succ
-      def seven : ℕ := six.succ
+      def num.two : ℕ := one.succ
+      def num.three : ℕ := two.succ
+      def num.four : ℕ := three.succ
+      def num.five : ℕ := four.succ
+      def num.six : ℕ := five.succ
+      def num.seven : ℕ := six.succ
 
+      open num
 
       theorem one_eq_succ_zero : one = zero.succ := rfl
       theorem two_eq_succ_one : two = one.succ := rfl
@@ -54,6 +52,7 @@ namespace ℕ
 
       theorem zero_ne_one : zero ≠ one :=
         fun h => succ_ne_zero (h.substr one_eq_succ_zero)
+
 
     end nums
 

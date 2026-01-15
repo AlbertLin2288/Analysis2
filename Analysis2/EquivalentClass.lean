@@ -85,7 +85,7 @@ namespace EquivalentClass
   -- theorem hlift_spec.{v} {R : α → α → Prop} {β : α → Sort v} {f : (a : α) → β a} {h : ∀ (a b : α), R a b → f a ≍ f b} (S : EquivalentClass R) : ∀(a : α), is_member a S → hlift S.isEqv f h S = f a :=
   --   fun a h' => eq_of_heq (h _ _ (member_related S S.sys_of_repr a ⟨S.sys_of_repr_spec, h'⟩))
 
-#check Quotient
+-- #check Quotient
 
 --   def lift2.{v} {R : α → α → Prop} (eqv : Equivalence R) {β : Sort v} (f : α → α → β) (h : ∀ (a1 a2 b1 b2 : α), R a1 a2 → R b1 b2 → f a1 b1 = f a2 b2) : EquivalentClass R → EquivalentClass R → β :=
 --     -- have h : ∀(a1 a2 : α), R a1 a2 → f a1 = f a2 := fun a1 a2 h' => funext fun b => h a1 a2 b b h' (eqv.refl b)

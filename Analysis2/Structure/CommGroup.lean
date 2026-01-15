@@ -74,6 +74,14 @@ namespace CommGroup
     intro h
     rw [←add_zero a, ←neg_add b, ←add_assoc, add_neg_eq_sub, h]
 
+  theorem eq_sub_right_of_add_eq {a b c : α} : a + b = c → a = c - b := by
+    intro h
+    rw [←add_zero a, ←add_neg b, ←add_assoc, add_neg_eq_sub, h]
+
+  theorem eq_sub_left_of_add_eq {a b c : α} : a + b = c → b = c - a := by
+    intro h
+    rw [←zero_add b, ←neg_add a, add_assoc, add_comm, h]
+
   theorem neg_sum : ∀(a b : α), -(a + b) = -a + -b := by
     intro a b
     rw [←add_zero (-a + _), ←add_neg (a + b), ←add_assoc, ←add_assoc, add_right_comm (-a), neg_add, zero_add, neg_add, zero_add]

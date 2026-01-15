@@ -6,7 +6,7 @@ namespace my
 open Classical
 open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing CommRing' Field
 open Comp
-open OrderedMonoid OrderedCommMonoid OrderedCommGroup OrderedSemiRing OrderedCommSemiRing OrderedCommRing OrderedCommRing'
+open OrderedMonoid OrderedCommMonoid OrderedCommGroup OrderedSemiRing OrderedCommSemiRing OrderedCommRing OrderedCommRing' OrderedField
 open Zero One
 
 open my renaming EquivalentClass → EC
@@ -367,35 +367,6 @@ namespace ℚ
 
   section inv
 
-    -- def inv_fn_fn : (Σ'(a : ℚ_con), a.fst ≠ zero) → ℚ_con :=
-    --   fun ah => ((eq_or_lt_or_gt ah.fst.fst zero).resolve_left ah.snd).elim'
-    --     (⟨ah.fst.snd, -ah.fst.fst, neg_neg_is_pos ·⟩)
-    --     (⟨ah.fst.snd, ah.fst.fst, ·⟩)
-    --   --⟨-a.fst, a.snd, a.h⟩
-
-    -- def inv_fn : (Σ'(a : ℚ_con), a.fst ≠ zero) → ℚ :=
-    --   fun a => ℚ.mk' (inv_fn_fn a)
-
-
-    -- def inv_fn_fn : (a : ℚ_con) → a.fst ≠ zero → ℚ_con :=
-    --   fun a h => ((eq_or_lt_or_gt a.fst zero).resolve_left h).elim'
-    --     (⟨a.snd, -a.fst, neg_neg_is_pos ·⟩) (⟨a.snd, a.fst, ·⟩)
-
-    -- def inv_fn : (a : ℚ_con) → a.fst ≠ zero → ℚ :=
-    --   fun a h => ℚ.mk' (inv_fn_fn a h)
-
-    -- private theorem inv_respect : ∀(a b : ℚ_con), eqv a b → inv_fn a ≍ inv_fn b := by
-    --   -- intro ⟨b1, b2, h⟩ ⟨b1', b2', h'⟩ h''
-    --   -- apply EC.sound
-    --   -- unfold eqv inv_fn_fn at *
-    --   -- simp only [mul_inv_left, mul_inv_right] at *
-    --   -- congr
-    --   sorry
-
-    -- -- def inv : ℚ → ℚ :=
-    -- def inv :=
-    --   EC.hlift (f := inv_fn) eqv.eqv inv_fn inv_respect
-
     def inv_fn_fn : (a : ℚ_con) → a.fst ≠ zero → ℚ_con :=
       fun a h => ((eq_or_lt_or_gt a.fst zero).resolve_left h).elim'
         (⟨-a.snd, -a.fst, neg_neg_is_pos ·⟩)
@@ -738,6 +709,25 @@ namespace ℚ
 
   end comp
 
+  section num
+    namespace num
+
+      def two := one + one
+      theorem two_pos : zero < two := pos_add_pos_is_pos zero_lt_one zero_lt_one
+      theorem two_nonzero : two ≠ zero := ne_of_gt two_pos
+
+      theorem mul_two (a : ℚ) : a * two = a + a := by
+        unfold two;simp only [mul_add,mul_one]
+
+      def one_half := ⟨two, two_nonzero⟩⁻¹
+      theorem one_half_pos : zero < one_half := inv_pos_is_pos two_pos
+      theorem one_half_nonzero : one_half ≠ zero := ne_of_gt one_half_pos
+      theorem add_half : one_half + one_half = one := by
+        rw [←mul_two];unfold one_half;rw[inv_mul_cancel];
+
+    end num
+
+  end num
 
 end ℚ
 

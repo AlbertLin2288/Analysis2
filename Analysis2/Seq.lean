@@ -204,6 +204,81 @@ section conv
       rw [neg_sub, ←add_assoc, sub_add_cancel] at h
       exact h
 
+  variable [One α] [Mul α] [Inv α] [CommRing α] [Field α]
+    [OrderedCommRing α] [OrderedField α]
+
+  private def two := (one : α) + one
+  set_option linter.unusedSectionVars false in
+  private theorem zero_lt_two : (zero:α) < two :=
+    pos_add_pos_is_pos zero_lt_one (zero_lt_one (α:=α))
+
+  private theorem two_ne_zero : two ≠ (zero:α) :=
+    (ne_of_lt (zero_lt_two (α := α))).symm
+
+  set_option linter.unusedSectionVars false in
+  private theorem mul_two_eq_add (a : α) : a * two = a + a := by
+    unfold two;simp only [mul_add,mul_one]
+
+  private def half := ⟨(two:α), two_ne_zero⟩⁻¹
+
+  private theorem half_pos : (zero : α) < half :=
+    inv_pos_is_pos zero_lt_two
+
+  private theorem add_half : half + half = (one : α) :=
+    Eq.trans (mul_two_eq_add half).symm (inv_mul_cancel two two_ne_zero)
+
+  theorem conv_to_mul_of_mul {s s' : Seq α} {a a' : α} : conv_to s a → conv_to s' a' → conv_to (s * s') (a * a') := by
+    intro h h' ε hε
+    conv in abs _ =>
+      rw [mul_def]
+      simp only
+      rw [←add_zero (_*_), ←neg_add (s n * a'), ←add_assoc, add_assoc]
+      rw [←mul_neg_right, ←mul_neg_left, ←mul_add, ←add_mul]
+    have ⟨N2, hN2⟩ := h one zero_lt_one
+    -- have ⟨N2', hN2'⟩ := h' one zero_lt_one
+    -- let N2m := max N2 N2'
+    let b := s N2
+    -- let a' := s' N2m
+    replace hN2 := fun n (hn:N2≤n) => lt_add_of_sub_left_lt (lt_of_le_lt (triangle_sub_ge_sub _ _) (hN2 n hn))
+    -- replace hN2' := fun m (hm:N2m≤m) => lt_add_of_sub_left_lt (lt_of_le_lt (triangle_sub_ge_sub _ _) (hN2' m N2m (le_of_le_le max_ge_snd hm) max_ge_snd))
+    let d := abs a + one
+    have hd : d > zero := nonneg_add_pos_is_pos (abs_nonneg _) zero_lt_one
+    refine' (lt_or_eq_of_le (abs_nonneg a')).elim _ _
+    -- have hd' : zero < abs a' := sorry
+    intro hd'
+    let ε2 := ε * half * ⟨abs a', ne_of_gt hd'⟩⁻¹
+    let ε2' := ε * half * ⟨d, ne_of_gt hd⟩⁻¹
+    have hε2 : zero < ε2 := mul_pos (mul_pos hε half_pos) (inv_pos_is_pos hd')
+    have hε2' : zero < ε2' := mul_pos (mul_pos hε half_pos) (inv_pos_is_pos hd)
+    have ⟨N, hN⟩ := h ε2 hε2
+    have ⟨N', hN'⟩ := h' ε2' hε2'
+    let Nm := max N N'
+    let Nm' := max Nm N2
+    exists Nm'
+    intro n hn
+    replace hN := hN n (le_of_le_le_le max_ge_fst max_ge_fst hn)
+    replace hN' := hN' n (le_of_le_le_le max_ge_snd max_ge_fst hn)
+    replace hN2 := hN2 n (le_of_le_le max_ge_snd hn)
+    -- replace hN2' := hN2' m (le_of_le_le max_ge_snd hm)
+    -- have := mul_add ε _ _ ▸ add_half (α:=α) ▸ (mul_one ε).symm
+    -- have := ((mul_inv_mul_cancel_right (ne_of_gt hd) (a:=ε*half)).substr (mul_add ε _ _ ▸ add_half (α:=α) ▸ mul_one ε))
+    -- have := ((mul_inv_mul_cancel_right (ne_of_gt hd) (a:=ε*half)).substr (mul_add ε _ _ ▸ add_half (α:=α) ▸ mul_one ε))
+    refine' lt_of_le_lt_eq (triangle_add_le_add _ _) _ ((mul_inv_mul_cancel_right (ne_of_gt hd')).substr (p:=(_+·=_)) ((mul_inv_mul_cancel_right (ne_of_gt hd)).substr (p:=(.+_=_)) (mul_add ε _ _ ▸ add_half (α:=α) ▸ mul_one ε))) --(mul_mul_inv_cancel_left2 (ne_of_gt hd))
+    rw [abs_of_mul_eq_mul_abs, abs_of_mul_eq_mul_abs, mul_comm (abs (s n))]
+    exact lt_of_add_lt_lt
+      (lt_of_mul_nonneg_nonneg_lt_lt (abs_nonneg _) (abs_nonneg _) hN' hN2)
+      (mul_lt_mul_of_pos_right hN hd')
+    intro hd'
+    replace hd' := eq_zero_of_abs_eq_zero hd'.symm
+    let ε2' := ε * ⟨d, ne_of_gt hd⟩⁻¹
+    have hε2' : zero < ε2' := mul_pos hε (inv_pos_is_pos hd)
+    have ⟨N', hN'⟩ := h' ε2' hε2'
+    refine' ⟨max N' N2,_⟩
+    intro n hn
+    rw [hd', mul_zero, add_zero, abs_of_mul_eq_mul_abs]
+    replace hN' := lt_of_mul_nonneg_nonneg_lt_lt (abs_nonneg _) (abs_nonneg _) (hN2 n (le_of_le_le max_ge_snd hn)) (hN' n (le_of_le_le max_ge_fst hn))
+    rwa [hd', mul_mul_inv_cancel_left2] at hN'
+
 end conv
 
 section cauchy
@@ -258,26 +333,6 @@ section cauchy
 
   variable [One α] [Mul α] [Inv α] [CommRing α] [Field α]
     [OrderedCommRing α] [OrderedField α]
-
-  private def two := (one : α) + one
-  set_option linter.unusedSectionVars false in
-  private theorem zero_lt_two : (zero:α) < two :=
-    pos_add_pos_is_pos zero_lt_one (zero_lt_one (α:=α))
-
-  private theorem two_ne_zero : two ≠ (zero:α) :=
-    (ne_of_lt (zero_lt_two (α := α))).symm
-
-  set_option linter.unusedSectionVars false in
-  private theorem mul_two_eq_add (a : α) : a * two = a + a := by
-    unfold two;simp only [mul_add,mul_one]
-
-  private def half := ⟨(two:α), two_ne_zero⟩⁻¹
-
-  private theorem half_pos : (zero : α) < half :=
-    inv_pos_is_pos zero_lt_two
-
-  private theorem add_half : half + half = (one : α) :=
-    Eq.trans (mul_two_eq_add half).symm (inv_mul_cancel two two_ne_zero)
 
   omit [OrderedField α] in
   theorem is_cauchy_of_mul {s s' : Seq α} : is_cauchy s → is_cauchy s' → is_cauchy (s * s') := by

@@ -31,6 +31,9 @@ section abs
 
   theorem abs_of_zero : abs zero = (zero : α) := abs_of_nonneg (le_refl zero)
 
+  theorem abs_of_eq_zero_is_zero {a : α} : a = zero → abs a = zero :=
+    (· ▸ abs_of_zero (α:=α))
+
 end abs
 
 
@@ -55,6 +58,12 @@ namespace OrderedCommGroup
 
   theorem neg_le_neg_iff {a b : α} : -b ≤ -a ↔ a ≤ b :=
     ⟨le_of_neg_le_neg, neg_le_neg_of_le⟩
+
+  theorem le_neg_of_le_neg {a b : α} : a ≤ -b → b ≤ -a :=
+    fun h => neg_neg b ▸ neg_le_neg_of_le h
+
+  theorem neg_le_of_neg_le {a b : α} : -a ≤ b → -b ≤ a :=
+    fun h => neg_neg a ▸ neg_le_neg_of_le h
 
   theorem le_of_add_le_add_right {a b c : α} : a + c ≤ b + c → a ≤ b := by
     intro h
@@ -114,6 +123,12 @@ namespace OrderedCommGroup
 
   theorem neg_lt_neg_iff {a b : α} : -b < -a ↔ a < b :=
     ⟨lt_of_neg_lt_neg, neg_lt_neg_of_lt⟩
+
+  theorem lt_neg_of_lt_neg {a b : α} : a < -b → b < -a :=
+    fun h => neg_neg b ▸ neg_lt_neg_of_lt h
+
+  theorem neg_lt_of_neg_lt {a b : α} : -a < b → -b < a :=
+    fun h => neg_neg a ▸ neg_lt_neg_of_lt h
 
   theorem sub_pos_of_lt {a b : α} : a < b → zero < b - a := by
     intro h
@@ -252,6 +267,16 @@ namespace OrderedCommGroup
 
   theorem abs_eq_zero_iff {a : α} : abs a = zero ↔ a = zero :=
     ⟨eq_zero_of_abs_eq_zero, (·.substr abs_of_zero)⟩
+
+  theorem abs_of_nonzero_is_nonzero {a : α} : a ≠ zero → abs a ≠ zero :=
+    fun h => ne_of_gt (abs_of_nonzero_is_pos h)
+
+  omit [Add α] in
+  theorem nonzero_of_abs_nonzero {a : α} : abs a ≠ zero → a ≠ zero :=
+    fun h h' => h (abs_of_eq_zero_is_zero h')
+
+  theorem abs_nonzero_iff {a : α} : abs a ≠ zero ↔ a ≠ zero :=
+    ⟨nonzero_of_abs_nonzero, abs_of_nonzero_is_nonzero⟩
 
   theorem abs_neg_eq_abs (a : α) : abs (-a) = abs a :=
     (le_or_gt zero a).elim'_spec (c:=α) (p:=(abs (-a)=·))

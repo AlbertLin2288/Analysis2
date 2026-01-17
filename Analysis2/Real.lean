@@ -8,7 +8,7 @@ open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing CommRing' Field
 open Comp
 open OrderedMonoid OrderedCommMonoid OrderedCommGroup OrderedSemiRing OrderedCommSemiRing OrderedCommRing OrderedCommRing' OrderedField
 open Zero One
-open Abs
+open Abs OfNat
 open Seq
 
 open my renaming EquivalentClass → EC
@@ -729,6 +729,46 @@ namespace ℝ
       _zero_le_one := _zero_le_one
 
     @[default_instance] instance : OrderedField ℝ where
+
+    theorem ofNat_repr (n : ℕ) : ofNat (α:=ℝ) n = mk' ⟨const_seq (ofNat (α:=ℚ) n), is_cauchy_of_const _⟩ := by
+      induction n
+      case _zero => rfl
+      case succ n h =>
+        conv => lhs;change ofNat (α:=ℝ) n + one
+        conv => rhs;enter [1,1,1];change ofNat (α:=ℚ) n + one
+        rw [h, add_def]
+        unfold add add_fn
+        rw [EC.lift_spec _ _ (EC.is_member_of_from_elm _ eqv.eqv)]
+        rw [EC.lift_spec _ _ one_is_member_one]
+        apply EC.sound
+        unfold add_fn_fn_fn one_repr eqv const_seq
+        simp only [Seq.add_def, Seq.neg_def]
+        conv in (fun _ => _) =>
+          ext n
+          rw [neg_sum, ←add_assoc, add_comm (ofNat _), add_sub_cancel]
+          change one - one
+          rw [sub_self]
+        exact conv_to_of_const zero
+
+    theorem archimedean : ∀x : ℝ, ∃n : ℕ, x ≤ ofNat n := by
+      intro x
+      let s := x.sys_of_repr.s
+      let hs : is_cauchy s := x.sys_of_repr.h
+      replace ⟨N, hN⟩ := hs one zero_lt_one
+      have ⟨x', hx'⟩ := (ℚ.archimedean (s N + one))
+      exists x'
+      rw [le_def, ofNat_repr]
+      unfold le le_fn
+      rw [EC.lift_spec _ _ (x.sys_of_repr_spec)]
+      rw [EC.lift_spec _ _ (EC.is_member_of_from_elm _ eqv.eqv)]
+      unfold le_fn_fn eqv
+      refine' Or.inr ⟨N, _⟩
+      intro n hn
+      simp only [Seq.neg_def, Seq.add_def]
+      show zero ≤ (ofNat x') + -(s n)
+      refine' le_of_le_le _ (add_le_add_right (-s n) hx')
+      rw [add_comm (s N), add_assoc, ←neg_sub, sub_nonneg_iff]
+      exact le_of_le_lt (self_le_abs_self (s n - s N)) (hN n N hn (le_self N))
 
   end comp
 

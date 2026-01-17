@@ -41,6 +41,4 @@ infixl:70(priority := high) " * "   => Mul.mul
 -- infixl:70(priority := high) " / "   => Div.div
 postfix:max (priority := high) "⁻¹" => Inv.inv
 
--- #check Lean.Meta.Symm.symmExt
-
 end my

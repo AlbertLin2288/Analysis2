@@ -7,7 +7,7 @@ open Classical
 open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing CommRing' Field
 open Comp
 open OrderedMonoid OrderedCommMonoid OrderedCommGroup OrderedSemiRing OrderedCommSemiRing OrderedCommRing OrderedCommRing' OrderedField
-open Zero One
+open Zero One OfNat
 
 open my renaming EquivalentClass → EC
 
@@ -706,6 +706,33 @@ namespace ℚ
     --   mul_eq_zero := _mul_eq_zero
 
     @[default_instance] instance : OrderedField ℚ where
+
+    theorem ofNat_repr (n : ℕ) : ofNat (α:=ℚ) n = mk' ⟨ofNat (α:=ℤ) n, one, zero_lt_one⟩ := by
+      induction n
+      case _zero => rfl
+      case succ n h =>
+        conv => lhs;change ofNat (α:=ℚ) n + one
+        rw [h, add_def]
+        unfold add add_fn
+        rw [EC.lift_spec _ _ (EC.is_member_of_from_elm _ eqv.eqv)]
+        rw [EC.lift_spec _ _ one_is_member_one]
+        apply EC.sound
+        unfold add_fn_fn_fn one_repr eqv
+        simp only [mul_one, one_mul]
+        rfl
+
+    theorem archimedean : ∀x : ℚ, ∃n : ℕ, x ≤ ofNat n := by
+      intro x
+      let ⟨x', hx'⟩ := ℤ.archimedean x.sys_of_repr.fst
+      exists x'
+      rw [le_def, ofNat_repr]
+      unfold le le_fn
+      rw [EC.lift_spec _ _ (x.sys_of_repr_spec)]
+      rw [EC.lift_spec _ _ (EC.is_member_of_from_elm _ eqv.eqv)]
+      unfold le_fn_fn eqv
+      simp only [mul_comm _ (one:ℤ)]
+      refine' le_of_le_le (mul_le_mul_of_nonneg_left hx' zero_le_one) _
+      refine' mul_le_mul_of_nonneg_right (ℤ.ge_one_of_pos x.sys_of_repr.h) (ofNat_nonneg _)
 
   end comp
 

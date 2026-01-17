@@ -5,7 +5,7 @@ noncomputable section
 namespace my
 open Classical
 open Comp
-open Zero One Abs
+open Zero One Abs OfNat
 open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing CommRing'
 open OrderedMonoid OrderedCommMonoid OrderedCommGroup OrderedSemiRing OrderedCommSemiRing
 
@@ -54,6 +54,23 @@ namespace OrderedCommRing
 
     -- apply Or.elim'_spec (h:=nonneg_or_neg (a*b)) (p:=(·=abs a * abs b))
 
+  open ℕ (_zero succ)
+
+  theorem ofNat_lt_of_lt {n m : ℕ} : n < m → ofNat' α n < ofNat m :=
+    match n, m with
+    | _, _zero => fun h => (ℕ.not_lt_zero _ h).elim
+    | _zero, succ m => fun _ => nonneg_add_pos_is_pos (ofNat_nonneg m) zero_lt_one
+    | succ _, succ _ => fun h => add_lt_add_right one (ofNat_lt_of_lt (ℕ.lt_of_succ_lt_succ h))
+
+
+  theorem le_of_ofNat_le {n m : ℕ} : ofNat' α n ≤ ofNat m → n ≤ m :=
+    fun h => le_of_not_lt fun h' => (ofNat_lt_of_lt h') h
+
+  theorem ofNat_le_iff {n m : ℕ} : ofNat' α n ≤ ofNat m ↔ n ≤ m :=
+    ⟨le_of_ofNat_le, ofNat_le_of_le⟩
+
+  theorem ofNat_lt_iff {n m : ℕ} : ofNat' α n < ofNat m ↔ n < m :=
+    ⟨lt_of_ofNat_lt, ofNat_lt_of_lt⟩
 
 
 end OrderedCommRing

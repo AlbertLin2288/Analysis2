@@ -8,7 +8,7 @@ open Classical
 open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing
 open OrderedMonoid OrderedCommMonoid OrderedCommGroup OrderedSemiRing OrderedCommSemiRing OrderedCommRing
 open Comp
-open Zero One
+open Zero One OfNat
 
 
 
@@ -22,7 +22,7 @@ def ℤ.eqv : ℕ_pair → ℕ_pair → Prop :=
 namespace ℤ.eqv
 
   theorem refl : ∀ (a : ℕ_pair), ℤ.eqv a a :=
-    fun ⟨a1, a2⟩ => add_comm a1 a2
+    fun ⟨a1, a2⟩ => ℕ.add_comm a1 a2
 
   theorem symm : ∀ {a b : ℕ_pair}, ℤ.eqv a b → ℤ.eqv b a := by
     unfold eqv
@@ -34,13 +34,13 @@ namespace ℤ.eqv
     unfold eqv
     intro ⟨a1, a2⟩ ⟨b1, b2⟩ ⟨c1, c2⟩ h1 h2
     simp only [] at *
-    replace h1 := (ℕ.add_left_inj (b2 + c1)).mpr h1
+    replace h1 := (ℕ.add_left_inj_iff (b2 + c1)).mpr h1
     rw (occs := .pos [1]) [←h2] at h1
     rw [
-      ←add_assoc, ←add_assoc,
-      add_assoc a1, add_assoc a2,
-      add_right_comm a1, add_right_comm a2,
-      add_comm b1, ℕ.add_left_inj
+      ←ℕ.add_assoc, ←ℕ.add_assoc,
+      ℕ.add_assoc a1, ℕ.add_assoc a2,
+      ℕ.add_right_comm a1, ℕ.add_right_comm a2,
+      ℕ.add_comm b1, ℕ.add_left_inj_iff
     ] at h1
     trivial
 
@@ -117,8 +117,6 @@ namespace ℤ
     theorem zero_ne_one : zero ≠ one := by
       intro h
       replace h := EC.sound_inv eqv.eqv h
-      unfold eqv zero_repr one_repr at h
-      simp only [zero_add] at h
       exact ℕ.zero_ne_one h
 
 
@@ -138,12 +136,12 @@ namespace ℤ
       unfold eqv add_fn_fn_fn at *
       simp only [] at *
       rw [
-        ←add_assoc, ←add_assoc,
-        add_right_comm a.fst, add_right_comm a.snd,
-        add_comm a.fst,
-        add_assoc _ b1, add_assoc _ b2
+        ←ℕ.add_assoc, ←ℕ.add_assoc,
+        ℕ.add_right_comm a.fst, ℕ.add_right_comm a.snd,
+        ℕ.add_comm a.fst,
+        ℕ.add_assoc _ b1, ℕ.add_assoc _ b2
       ]
-      exact (ℕ.add_right_inj _).mpr h'
+      exact congrArg _ h'
 
     def add_fn : ℕ_pair → ℤ → ℤ :=
       fun a => EquivalentClass.lift (β := ℤ) eqv.eqv (add_fn_fn a) (add_fn_respect a)
@@ -156,9 +154,9 @@ namespace ℤ
       unfold eqv add_fn_fn_fn at *
       simp only [] at *
       rw [
-        ← add_assoc, ← add_assoc,
-        add_right_comm a1, add_right_comm a2,
-        add_right_comm, h
+        ← ℕ.add_assoc, ← ℕ.add_assoc,
+        ℕ.add_right_comm a1, ℕ.add_right_comm a2,
+        ℕ.add_right_comm, h
       ]
 
     def add : ℤ → ℤ → ℤ :=
@@ -211,7 +209,7 @@ namespace ℤ
       rw [EquivalentClass.lift_spec _ cp c.sys_of_repr_spec]
       rw [EquivalentClass.lift_spec _ bcp (EquivalentClass.is_member_of_from_elm bcp _)]
       unfold abp bcp add_fn_fn_fn
-      rw [add_assoc, add_assoc]
+      rw [ℕ.add_assoc, ℕ.add_assoc]
 
     -- theorem zero_def : Monoid.zero = zero := rfl
 
@@ -277,11 +275,11 @@ namespace ℤ
       unfold eqv mul_fn_fn_fn at *
       simp only [] at *
       rw [
-        ←add_assoc, ←add_assoc,
-        add_right_comm (a.fst * b1), add_right_comm (a.fst * b2),
-        ← mul_add, ← mul_add,
-        add_assoc, add_assoc,
-        ← mul_add, ← mul_add, h'
+        ←ℕ.add_assoc, ←ℕ.add_assoc,
+        ℕ.add_right_comm (a.fst * b1), ℕ.add_right_comm (a.fst * b2),
+        ← ℕ.mul_add, ← ℕ.mul_add,
+        ℕ.add_assoc, ℕ.add_assoc,
+        ← ℕ.mul_add, ← ℕ.mul_add, h'
       ]
 
     def mul_fn : ℕ_pair → ℤ → ℤ :=
@@ -296,13 +294,13 @@ namespace ℤ
       simp only [] at *
       rw [
         ← eqc,
-        ← add_assoc, ← add_assoc,
-        add_right_comm _ _ (b2 * c.fst),
-        add_right_comm _ _ (b2 * c.fst),
-        ← add_mul, add_assoc, ← add_mul,
-        add_comm (a1 * _),
-        add_right_comm _ (a1 * _),
-        ← add_mul, add_assoc, ← add_mul,
+        ← ℕ.add_assoc, ← ℕ.add_assoc,
+        ℕ.add_right_comm _ _ (b2 * c.fst),
+        ℕ.add_right_comm _ _ (b2 * c.fst),
+        ← ℕ.add_mul, ℕ.add_assoc, ← ℕ.add_mul,
+        ℕ.add_comm (a1 * _),
+        ℕ.add_right_comm _ (a1 * _),
+        ← ℕ.add_mul, ℕ.add_assoc, ← ℕ.add_mul,
         h,
       ]
 
@@ -321,7 +319,7 @@ namespace ℤ
       rw [EquivalentClass.lift_spec n np n.sys_of_repr_spec]
       rw [EquivalentClass.lift_spec _ one_repr one_is_member_one]
       unfold mul_fn_fn mul_fn_fn_fn one_repr
-      simp only [ℕ.mul_zero, ℕ.add_zero, ℕ.mul_one, zero_add]
+      simp only [ℕ.mul_zero, ℕ.add_zero, ℕ.mul_one, ℕ.zero_add]
       exact (EquivalentClass.from_sys_of_repr _).symm
 
     theorem _mul_comm : ∀(n m : ℤ), n * m = m * n := by
@@ -361,7 +359,7 @@ namespace ℤ
       rw [EC.lift_spec _ bcp (EC.is_member_of_from_elm bcp _)]
       apply EC.sound
       unfold abp bcp mul_fn_fn_fn eqv
-      simp only [add_mul, mul_add]
+      simp only [ℕ.add_mul, ℕ.mul_add]
       ac_nf
 
     theorem _mul_add : ∀ (a b c : ℤ), a * (b + c) = a * b + a * c := by
@@ -385,7 +383,7 @@ namespace ℤ
       rw [EC.lift_spec _ abp (EC.is_member_of_from_elm abp _)]
       rw [EC.lift_spec _ acp (EC.is_member_of_from_elm acp _)]
       unfold abp acp bcp add_fn_fn_fn mul_fn_fn_fn
-      simp only [mul_add]
+      simp only [ℕ.mul_add]
       ac_nf
 
     theorem _add_mul : ∀ (a b c : ℤ), (a + b) * c = a * c + b * c := by
@@ -417,7 +415,7 @@ namespace ℤ
         replace h := EC.sound_inv eqv.eqv h
         simp only [eqv] at h
         replace h : ((ap.fst + bp.snd) * cp.fst) + ((ap.snd + bp.fst) * cp.snd) = ((ap.fst + bp.snd) * cp.snd) + ((ap.snd + bp.fst) * cp.fst) := by
-          simp only [add_mul] at |- h
+          simp only [ℕ.add_mul] at |- h
           ac_nf at |- h
         have hc_neq : cp.fst ≠ cp.snd := by
           intro heq
@@ -434,11 +432,11 @@ namespace ℤ
           : a1 + b2 = a2 + b1 := by
             have ⟨x, hx⟩ := le_of_lt h
             rw [hx] at h'
-            simp only [add_mul, mul_add] at h'
+            simp only [ℕ.add_mul, ℕ.mul_add] at h'
             ac_nf at h'
-            rw [add_comm (b1 * x) _] at h'
-            repeat rw [add_left_comm (_ * x) _ _] at h'
-            simp only [ℕ.add_right_inj, ← add_mul] at h'
+            rw [ℕ.add_comm (b1 * x) _] at h'
+            repeat rw [ℕ.add_left_comm (_ * x) _ _] at h'
+            simp only [ℕ.add_right_inj_iff, ← ℕ.add_mul] at h'
             have hx0 : x ≠ zero := fun h' => by rw [h', ℕ.add_zero] at hx;exact (ne_of_lt h) hx.symm
             replace h' := (ℕ.mul_left_inj hx0).mp h'
             ac_nf at h' |-;symm;assumption
@@ -478,26 +476,26 @@ namespace ℤ
       case mp =>
         intro ⟨x, h⟩
         refine ⟨x, ?_⟩
-        replace h := (ℕ.add_left_inj b1').mpr h
-        apply (ℕ.add_left_inj b1).mp
+        replace h := (ℕ.add_left_inj_iff b1').mpr h
+        apply ℕ.add_left_inj b1
         rw [
-          add_right_comm, h,
-          add_right_comm _ _ b1,
-          add_right_comm _ _ b1,
-          add_assoc _ b1, h',
-          add_right_comm, ←add_assoc
+          ℕ.add_right_comm, h,
+          ℕ.add_right_comm _ _ b1,
+          ℕ.add_right_comm _ _ b1,
+          ℕ.add_assoc _ b1, h',
+          ℕ.add_right_comm, ←ℕ.add_assoc
         ]
       case mpr =>
         intro ⟨x, h⟩
         refine ⟨x, ?_⟩
-        replace h := (ℕ.add_left_inj b1).mpr h
-        apply (ℕ.add_left_inj b1').mp
+        replace h := (ℕ.add_left_inj_iff b1).mpr h
+        apply ℕ.add_left_inj b1'
         rw [
-          add_right_comm, h,
-          add_right_comm _ _ b1,
-          add_right_comm _ _ b1,
-          add_assoc _ b1, h',
-          add_right_comm _ x, ←add_assoc
+          ℕ.add_right_comm, h,
+          ℕ.add_right_comm _ _ b1,
+          ℕ.add_right_comm _ _ b1,
+          ℕ.add_assoc _ b1, h',
+          ℕ.add_right_comm _ x, ←ℕ.add_assoc
         ]
 
     def le_fn : ℕ_pair → ℤ → Prop :=
@@ -515,8 +513,8 @@ namespace ℤ
         intro b
         rw [
           ← ℕ.add_le_add_iff_right (c := a2'),
-          add_right_comm, h,
-          add_right_comm _ b.fst,
+          ℕ.add_right_comm, h,
+          ℕ.add_right_comm _ b.fst,
         ]
       conv =>
         rhs
@@ -524,8 +522,8 @@ namespace ℤ
         intro b
         rw [
           ← ℕ.add_le_add_iff_right (c := a2),
-          add_comm _ a2, add_comm _ a2,
-          ← add_assoc, ← add_assoc,
+          ℕ.add_comm _ a2, ℕ.add_comm _ a2,
+          ← ℕ.add_assoc, ← ℕ.add_assoc,
         ]
 
     def le : ℤ → ℤ → Prop :=
@@ -535,7 +533,7 @@ namespace ℤ
       intro
       unfold le le_fn le_fn_fn eqv
       simp [EC.lift_spec _ _ (EC.sys_of_repr_spec _)] at *
-      rw [add_comm]
+      rw [ℕ.add_comm]
       exact le_self _
 
     theorem _le_trans : ∀(a b c : ℤ), a.le b → b.le c → a.le c := by
@@ -548,9 +546,9 @@ namespace ℤ
         EC.lift_spec c _ c.sys_of_repr_spec] at *
       intro h1 h2
       have h3 := ℕ.add_le_le_le h1 h2
-      repeat rw [add_assoc] at h3
-      repeat rw [add_left_comm _ bp.fst] at h3
-      repeat rw [add_left_comm _ bp.snd] at h3
+      repeat rw [ℕ.add_assoc] at h3
+      repeat rw [ℕ.add_left_comm _ bp.fst] at h3
+      repeat rw [ℕ.add_left_comm _ bp.snd] at h3
       exact ℕ.add_le_add_iff_left.mp (ℕ.add_le_add_iff_left.mp h3)
 
     theorem _le_antisymm : ∀(a b : ℤ), a.le b → b.le a → a = b := by
@@ -588,8 +586,8 @@ namespace ℤ
       | rw [EC.lift_spec _ cap (EC.is_member_of_from_elm _ eqv.eqv)]
       | rw [EC.lift_spec _ cbp (EC.is_member_of_from_elm _ eqv.eqv)]
       unfold le_fn_fn cap cbp add_fn_fn_fn eqv EC.lift at *
-      simp only [add_assoc, ←add_left_comm cp.fst]
-      simp only [← add_left_comm cp.snd, ℕ.add_le_add_iff_left]
+      simp only [ℕ.add_assoc, ←ℕ.add_left_comm cp.fst]
+      simp only [← ℕ.add_left_comm cp.snd, ℕ.add_le_add_iff_left]
       ac_nf at *
 
     @[default_instance] instance : OrderedCommMonoid ℤ where
@@ -603,7 +601,7 @@ namespace ℤ
       simp only [
         EC.lift_spec _ zero_repr zero_is_member_zero,
         EC.lift_spec _ one_repr one_is_member_one,
-        zero_repr, one_repr, zero_add, ℕ.zero_le_one]
+        zero_repr, one_repr, ℕ.zero_add, ℕ.zero_le_one]
 
     theorem _mul_nonneg {a b : ℤ} : a ≥ zero → b ≥ zero → (a * b) ≥ zero := by
       simp only [le_def]
@@ -620,9 +618,9 @@ namespace ℤ
       ]
       rw [EC.lift_spec _ abp (EC.is_member_of_from_elm abp _)]
       unfold zero_repr abp mul_fn_fn_fn
-      simp only [zero_add] at *
+      simp only [ℕ.zero_add] at *
       intro ⟨x, hx⟩ ⟨x', hx'⟩
-      simp only [hx, hx', add_mul, mul_add]
+      simp only [hx, hx', ℕ.add_mul, ℕ.mul_add]
       exists x * x'
       ac_nf
 
@@ -631,6 +629,50 @@ namespace ℤ
       _zero_le_one := _zero_le_one
 
     @[default_instance] instance : OrderedCommRing' ℤ where
+
+    theorem ge_one_of_pos {a : ℤ} : zero < a → one ≤ a := by
+      intro h
+      have h' := le_of_lt h
+      rw [le_def] at h' |-
+      unfold le le_fn at h' |-
+      rw [EC.lift_spec _ _ (zero_is_member_zero)] at h'
+      rw [EC.lift_spec _ _ (one_is_member_one)] at |-
+      rw [EC.lift_spec _ _ (a.sys_of_repr_spec)] at h' |-
+      unfold zero_repr at h'
+      unfold one_repr at |-
+      unfold le_fn_fn at h' |-
+      simp only at h' |-
+      rw [ℕ.one_eq_succ_zero, ℕ.succ_add]
+      simp only [ℕ.zero_add] at h' |-
+      refine' ℕ.succ_le_of_lt (lt_of_le_ne h' _)
+      intro h';apply ne_of_lt h
+      apply EC.sound' eqv.eqv zero_is_member_zero a.sys_of_repr_spec
+      unfold eqv zero_repr
+      simp only [ℕ.zero_add]
+      exact h'
+
+    theorem ofNat_repr (n : ℕ) : ofNat (α:=ℤ) n = mk' ⟨n, zero⟩ := by
+      induction n
+      case _zero => rfl
+      case succ n h =>
+        conv => lhs;change ofNat (α:=ℤ) n + one
+        rw [h, add_def]
+        unfold add add_fn
+        rw [EC.lift_spec _ _ (EC.is_member_of_from_elm _ eqv.eqv)]
+        rw [EC.lift_spec _ _ one_is_member_one]
+        rfl
+
+
+    theorem archimedean : ∀x : ℤ, ∃n : ℕ, x ≤ ofNat n := by
+      intro x
+      exists x.sys_of_repr.fst
+      rw [le_def, ofNat_repr]
+      unfold le le_fn
+      rw [EC.lift_spec _ _ (x.sys_of_repr_spec)]
+      rw [EC.lift_spec _ _ (EC.is_member_of_from_elm _ eqv.eqv)]
+      unfold le_fn_fn eqv
+      simp only [ℕ.add_zero]
+      exact ℕ.le_add_left _ (le_self _)
 
     section nums
 

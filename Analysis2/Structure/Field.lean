@@ -13,7 +13,10 @@ namespace Field
   open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing CommRing'
   variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Neg α] [Inv α] [CommMonoid α] [CommGroup α] [CommRing α] [Field α]
 
-  theorem inv_nonzero (a : α) {ha : a ≠ zero} : ⟨a, ha⟩⁻¹ ≠ zero :=
+  theorem inv_of_one : ⟨(one : α), zero_ne_one.symm⟩⁻¹ = one :=
+    one_mul ⟨(one : α), one_ne_zero⟩⁻¹ ▸ mul_inv_cancel one one_ne_zero
+
+  theorem inv_nonzero {a : α} (ha : a ≠ zero) : ⟨a, ha⟩⁻¹ ≠ zero :=
     fun h => zero_ne_one (mul_zero a ▸ h ▸ mul_inv_cancel a ha)
 
   theorem inv_mul_cancel : ∀(a : α), (h : a ≠ zero) → ⟨a, h⟩⁻¹ * a = one :=
@@ -54,6 +57,13 @@ namespace Field
 
   theorem inv_neg (a : α) (ha : a ≠ zero) : ⟨-a, neg_nonzero ha⟩⁻¹ = -⟨a, ha⟩⁻¹ :=
     mul_left_inj (neg_nonzero ha) (mul_neg_both a ⟨a,ha⟩⁻¹ ▸ mul_inv_cancel a ha ▸ (mul_inv_cancel (-a) (neg_nonzero ha)))
+
+  theorem inv_inv {a : α} (ha : a ≠ zero) : ⟨⟨a, ha⟩⁻¹, inv_nonzero ha⟩⁻¹ = a := by
+    refine' mul_right_inj (inv_nonzero ha) _
+    rw [mul_inv_cancel,inv_mul_cancel]
+
+
+
 
 
 end Field

@@ -3,6 +3,7 @@ import Analysis2.CompStructure.OrderedCommRing
 import Analysis2.Nat
 
 noncomputable section
+set_option maxHeartbeats 5000
 namespace my
 open Classical
 open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing

@@ -22,6 +22,8 @@ namespace SemiRing
 
   instance : Std.Associative (α := α) Mul.mul := ⟨mul_assoc⟩
 
+  theorem one_ne_zero : (one : α) ≠ zero := ne_comm.mp zero_ne_one
+
 end SemiRing
 
 end my

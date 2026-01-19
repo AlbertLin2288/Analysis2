@@ -38,6 +38,9 @@ namespace Seq
 
   theorem abs_def {α : Type} [Zero α] [Neg α] [Comp α] {s : Seq α} : abs s = fun n => abs (s n) := rfl
 
+  theorem abs_seq_neg_eq_abs  {α : Type} [Zero α] [Neg α] [Add α] [Comp α] [CommMonoid α] [CommGroup α] [OrderedCommMonoid α] (s : Seq α) : abs (-s) = abs s :=
+    funext fun n => abs_neg_eq_abs (s n)
+
   @[reducible] instance {α : Type} [Mul α] : Mul (Seq α) :=
     ⟨fun s1 s2 n => (s1 n) * (s2 n)⟩
 
@@ -134,6 +137,7 @@ section conv
   theorem conv_of_const' : ∀(s : Seq α), is_const s → is_conv s :=
     fun s h => is_conv_of_conv_to (conv_to_of_const' s h)
 
+
   variable [OrderedCommMonoid α]
 
   theorem conv_to_neg_of_neg {s : Seq α} {a : α} : conv_to s a  → conv_to (-s) (-a) := by
@@ -178,6 +182,19 @@ section conv
 
   theorem is_conv_of_sum {s s' : Seq α} : is_conv s → is_conv s' → is_conv (s + s') :=
     fun h h' => is_conv_of_conv_to (conv_to_sum_of_sum h.choose_spec h'.choose_spec)
+
+  theorem ne_of_conv_to_ne {s s' : Seq α} {a a' : α} (h : conv_to s a) (h' : conv_to s' a') (hne : a ≠ a') : s ≠ s' := by
+    intro he
+    have hne' : a-a' ≠ zero := fun h' => hne (eq_of_sub_eq_zero _ _ h')
+    replace h := conv_to_sum_of_sum h (conv_to_neg_of_neg h')
+    replace ⟨N, hN⟩ := h (abs (a - a')) (abs_of_nonzero_is_pos hne')
+    replace hN := lt_of_le_lt (triangle_sub_ge_sub' _ _) (hN N (le_self _))
+    replace hN := add_neg (abs (a - a')) ▸ sub_lt_of_sub_lt hN
+    replace hN := he ▸ nonzero_of_abs_nonzero (ne_of_lt hN).symm
+    exact (add_neg (s' N) ▸ hN) rfl
+
+  theorem conv_to_const_eq_const {a a' : α} : conv_to (const_seq a) a' → a = a' :=
+    fun h => not_not.mp (fun h' => (ne_of_conv_to_ne (conv_to_of_const a) h h') rfl)
 
   variable [OrderedCommGroup α]
 

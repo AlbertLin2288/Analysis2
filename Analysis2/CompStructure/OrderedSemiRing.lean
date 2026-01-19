@@ -82,6 +82,15 @@ namespace OrderedSemiRing
   theorem le_of_mul_nonneg_nonneg_le_le {a b c d : α} : zero ≤ a → zero ≤ c → a ≤ b → c ≤ d → a * c ≤ b * d :=
     fun ha hc h h' => le_of_le_le (mul_le_mul_of_nonneg_right h hc) (mul_le_mul_of_nonneg_left h' (le_of_le_le ha h))
 
+  theorem le_of_mul_pos_nonneg_le_le {a b c d : α} : zero < a → zero ≤ c → a ≤ b → c ≤ d → a * c ≤ b * d :=
+    fun ha hc h h' => le_of_mul_nonneg_nonneg_le_le (le_of_lt ha) hc h h'
+
+  theorem le_of_mul_nonneg_pos_le_le {a b c d : α} : zero ≤ a → zero < c → a ≤ b → c ≤ d → a * c ≤ b * d :=
+    fun ha hc h h' => le_of_mul_nonneg_nonneg_le_le ha (le_of_lt hc) h h'
+
+  theorem le_of_mul_pos_pos_le_le {a b c d : α} : zero < a → zero < c → a ≤ b → c ≤ d → a * c ≤ b * d :=
+    fun ha hc h h' => le_of_mul_nonneg_nonneg_le_le (le_of_lt ha) (le_of_lt hc) h h'
+
 end OrderedSemiRing
 
 

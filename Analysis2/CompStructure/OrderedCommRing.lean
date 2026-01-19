@@ -62,7 +62,6 @@ namespace OrderedCommRing
     | _zero, succ m => fun _ => nonneg_add_pos_is_pos (ofNat_nonneg m) zero_lt_one
     | succ _, succ _ => fun h => add_lt_add_right one (ofNat_lt_of_lt (ℕ.lt_of_succ_lt_succ h))
 
-
   theorem le_of_ofNat_le {n m : ℕ} : ofNat' α n ≤ ofNat m → n ≤ m :=
     fun h => le_of_not_lt fun h' => (ofNat_lt_of_lt h') h
 
@@ -72,6 +71,23 @@ namespace OrderedCommRing
   theorem ofNat_lt_iff {n m : ℕ} : ofNat' α n < ofNat m ↔ n < m :=
     ⟨lt_of_ofNat_lt, ofNat_lt_of_lt⟩
 
+  theorem ofNat_of_pos {n : ℕ} : n > zero → ofNat (α:=α) n > zero :=
+    ofNat_lt_of_lt (α:=α)
+
+  theorem nonzero_of_ofNat_of_pos {n : ℕ} : n > zero → ofNat (α:=α) n ≠ zero :=
+    fun h => ne_of_gt (ofNat_lt_of_lt h)
+
+  theorem ofNat_of_nonzero {n : ℕ} : n ≠ zero → ofNat (α:=α) n ≠ zero :=
+    fun h => ne_of_gt (ofNat_lt_of_lt (α:=α) (ℕ.pos_of_nonzero h))
+
+  theorem pos_of_ofNat_of_nonzero {n : ℕ} : n ≠ zero → ofNat (α:=α) n > zero :=
+    fun h => ofNat_lt_of_lt (α:=α) (ℕ.pos_of_nonzero h)
+
+  theorem pos_of_ofNat_Np {n : ℕp} : zero < ofNat (α:=α) n.n :=
+    ofNat_of_pos n.p
+
+  theorem nonzero_of_ofNat_Np {n : ℕp} : ofNat (α:=α) n.n ≠ zero :=
+    nonzero_of_ofNat_of_pos n.p
 
 end OrderedCommRing
 

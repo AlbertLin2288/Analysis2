@@ -110,6 +110,22 @@ namespace OrderedCommGroup
   theorem add_lt_add_right {a b : α} : ∀(c : α), a < b → a + c < b + c :=
     fun _ => contrapos le_of_add_le_add_right
 
+  theorem lt_of_add_lt_add_right {a b c : α} : a + c < b + c → a < b := by
+    intro h
+    rw [←add_zero a, ←add_zero b, ←add_neg c, ←add_assoc, ←add_assoc]
+    exact add_lt_add_right (-c) h
+
+  theorem lt_of_add_lt_add_left {a b c : α} : c + a < c + b → a < b := by
+    intro h
+    rw [←zero_add a, ←zero_add b, ←neg_add c, add_assoc, add_assoc]
+    exact add_lt_add_left (-c) h
+
+  theorem add_lt_add_right_iff {a b c : α} : a + c < b + c ↔ a < b :=
+    ⟨lt_of_add_lt_add_right, add_lt_add_right _⟩
+
+  theorem add_lt_add_left_iff {a b c : α} : c + a < c + b ↔ a < b :=
+    ⟨lt_of_add_lt_add_left, add_lt_add_left _⟩
+
   theorem neg_lt_neg_of_lt {a b : α} : a < b → -a > -b := by
     intro h
     replace h := add_lt_add_right (-a + -b) h
@@ -222,6 +238,27 @@ namespace OrderedCommGroup
   theorem sub_le_of_sub_le {a b c : α} : a - b ≤ c → a - c ≤ b :=
     fun h => sub_right_le_of_le_add (le_add_of_sub_left_le h)
 
+  theorem add_le_of_le_sub_right {a b c : α} : a ≤ b - c → a + c ≤ b :=
+    fun h => sub_add_cancel b c ▸ add_le_add_right c h
+
+  theorem add_le_of_le_sub_left {a b c : α} : a ≤ b - c → c + a ≤ b :=
+    fun h => add_comm a c ▸ add_le_of_le_sub_right h
+
+  theorem le_sub_right_of_add_le {a b c : α} : a + b ≤ c → a ≤ c - b :=
+    fun h => add_sub_cancel a b ▸ add_le_add_right (-b) h
+
+  theorem le_sub_left_of_add_le {a b c : α} : a + b ≤ c → b ≤ c - a :=
+    fun h => le_sub_right_of_add_le (add_comm a b ▸ h)
+
+  theorem le_sub_iff_add_le_left {a b c : α} : a ≤ b - c ↔ c + a ≤ b :=
+    ⟨add_le_of_le_sub_left, le_sub_left_of_add_le⟩
+
+  theorem le_sub_iff_add_le_right {a b c : α} : a ≤ b - c ↔ a + c ≤ b :=
+    ⟨add_le_of_le_sub_right, le_sub_right_of_add_le⟩
+
+  theorem le_sub_of_le_sub {a b c : α} : a ≤ b - c → c ≤ b - a :=
+    fun h => le_sub_right_of_add_le (add_le_of_le_sub_left h)
+
   theorem lt_add_of_sub_right_lt {a b c : α} : a - c < b → a < b + c :=
     fun h => sub_add_cancel a c ▸ add_lt_add_right c h
 
@@ -282,6 +319,12 @@ namespace OrderedCommGroup
     (le_or_gt zero a).elim'_spec (c:=α) (p:=(abs (-a)=·))
       (fun h => ((neg_neg a).subst (abs_of_nonpos (neg_nonneg_is_nonpos h))))
       (fun h => (abs_of_pos (neg_neg_is_pos h)))
+
+  theorem abs_of_abs (a : α) : abs (abs a) = abs a :=
+    abs_of_nonneg (abs_nonneg a)
+
+  theorem abs_of_neg_abs (a : α) : abs (-abs a) = abs a :=
+    eq_of_eq_eq (abs_of_nonpos (neg_nonneg_is_nonpos (abs_nonneg a))) (neg_neg (abs a))
 
   theorem self_le_abs_self (a : α) : a ≤ abs a :=
     (le_or_ge zero a).elim (fun h => le_of_eq (abs_of_nonneg h).symm) (le_trans _ _ _ · (abs_nonneg a))

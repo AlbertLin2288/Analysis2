@@ -255,10 +255,14 @@ namespace ℕ
 
     @[reducible] def pos (n : ℕ) : Prop := zero < n
 
-    theorem pos_iff_neq_zero : ∀(n : ℕ), n.pos ↔ n ≠ zero :=
-      fun n => Iff.intro
-        (fun h => (ne_of_lt h).symm)
-        (fun h => lt_of_le_ne n.zero_le h.symm)
+    theorem pos_of_nonzero {n : ℕ} : n ≠ zero → zero < n :=
+      fun h => lt_of_le_ne n.zero_le h.symm
+
+    theorem nonzero_of_pos {n : ℕ} : zero < n → n ≠ zero :=
+      ne_of_gt
+
+    theorem pos_iff_nonzero : ∀(n : ℕ), zero < n ↔ n ≠ zero :=
+      fun _ => ⟨nonzero_of_pos, pos_of_nonzero⟩
 
     theorem le_succ : ∀ (n : ℕ), n ≤ n.succ :=
       fun n => ⟨one, n.add_one_eq_succ.symm⟩
@@ -443,6 +447,10 @@ namespace ℕ
       exact mul_left_inj hc
 
 end ℕ
+
+structure ℕp where
+  n : ℕ
+  p : zero < n
 
 class OfNat (α : Type) where
   ofNat : ℕ → α

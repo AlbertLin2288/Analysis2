@@ -2,6 +2,7 @@ import Analysis2.Int
 import Analysis2.CompStructure.OrderedField
 
 noncomputable section
+set_option maxHeartbeats 5000
 namespace my
 open Classical
 open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing CommRing' Field
@@ -734,6 +735,17 @@ namespace ℚ
       refine' le_of_le_le (mul_le_mul_of_nonneg_left hx' zero_le_one) _
       refine' mul_le_mul_of_nonneg_right (ℤ.ge_one_of_pos x.sys_of_repr.h) (ofNat_nonneg _)
 
+    theorem archimedean_inv : ∀x : ℚ, x > zero → ∃n : ℕp, ⟨ofNat (α:=ℚ) n.n, nonzero_of_ofNat_Np⟩⁻¹ ≤ x := by
+      intro x hx
+      let x' := ⟨x, ne_of_gt hx⟩⁻¹
+      have ⟨n, hn⟩ := archimedean x'
+      have np : zero < n := ℕ.pos_of_nonzero (fun h => not_le_of_lt (inv_pos_is_pos hx) ((h ▸ hn) : x' ≤ ofNat' ℚ zero))
+      refine' ⟨⟨n, np⟩, _⟩
+      apply pos_ge_of_inv_le hx (inv_pos_is_pos pos_of_ofNat_Np)
+      rw [inv_inv]
+      exact hn
+
+
   end comp
 
   section num
@@ -742,6 +754,8 @@ namespace ℚ
       def two := one + one
       theorem two_pos : zero < two := pos_add_pos_is_pos zero_lt_one zero_lt_one
       theorem two_nonzero : two ≠ zero := ne_of_gt two_pos
+      theorem one_lt_two : one < two :=
+        add_zero one ▸ add_lt_add_left one zero_lt_one
 
       theorem mul_two (a : ℚ) : a * two = a + a := by
         unfold two;simp only [mul_add,mul_one]
@@ -751,6 +765,18 @@ namespace ℚ
       theorem one_half_nonzero : one_half ≠ zero := ne_of_gt one_half_pos
       theorem add_half : one_half + one_half = one := by
         rw [←mul_two];unfold one_half;rw[inv_mul_cancel];
+      theorem half_lt_one : one_half < one :=
+        inv_of_one ▸ inv_gt_of_pos_lt zero_lt_one one_lt_two
+
+      @[reducible] def half : ℚ → ℚ := (one_half * ·)
+
+      theorem half_of_pos_is_pos {a : ℚ} : zero < a → zero < half a :=
+        mul_pos one_half_pos
+      theorem half_of_pos_lt_self {a : ℚ} : zero < a → half a < a :=
+        fun h => (one_mul a).subst (mul_lt_mul_of_pos_right half_lt_one h)
+      theorem add_half_half (a : ℚ) : half a + half a = a :=
+        add_mul _ _ _ ▸ add_half ▸ one_mul a
+
 
     end num
 

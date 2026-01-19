@@ -14,7 +14,6 @@ jobs:
       - uses: leanprover/lean-action@v1
         with:
           build: "true"
-          mk_all-check: "true"
           lean4checker: "true"
           use-github-cache: "false"
 

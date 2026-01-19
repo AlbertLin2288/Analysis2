@@ -1,5 +1,6 @@
 import Analysis2.logic
 noncomputable section
+set_option maxHeartbeats 5000
 namespace my
 open Classical
 open Max Min
@@ -114,6 +115,12 @@ namespace Comp
   theorem le_of_not_le {a b : α} : ¬(a ≤ b) → b ≤ a :=
     ((le_or_ge a b).resolve_left ·)
 
+  theorem not_le_iff {a b : α} : ¬(a ≤ b) ↔ (a > b) :=
+    ⟨lt_of_not_le , not_le_of_lt⟩
+
+  theorem not_lt_iff {a b : α} : ¬(a < b) ↔ (a ≥ b) :=
+    ⟨le_of_not_lt , not_lt_of_le⟩
+
   section chain
 
     variable {a b : α}
@@ -168,6 +175,36 @@ namespace Comp
 
     theorem le_of_lt_lt : a < b → b < c → a ≤ c :=
       fun h h' => le_of_lt (lt_of_lt_lt h h')
+
+    theorem ne_of_lt_eq : a < b → b = c → a ≠ c :=
+      fun h h' => ne_of_lt (lt_of_lt_eq h h')
+
+    theorem ne_of_eq_lt : a = b → b < c → a ≠ c :=
+      fun h h' => ne_of_lt (lt_of_eq_lt h h')
+
+    theorem ne_of_lt_le : a < b → b ≤ c → a ≠ c :=
+      fun h h' => ne_of_lt (lt_of_lt_le h h')
+
+    theorem ne_of_le_lt : a ≤ b → b < c → a ≠ c :=
+      fun h h' => ne_of_lt (lt_of_le_lt h h')
+
+    theorem ne_of_lt_lt : a < b → b < c → a ≠ c :=
+      fun h h' => ne_of_lt (lt_of_lt_lt h h')
+
+    theorem ne_of_lt_eq' : a < b → b = c → c ≠ a :=
+      fun h h' => ne_of_gt (lt_of_lt_eq h h')
+
+    theorem ne_of_eq_lt' : a = b → b < c → c ≠ a :=
+      fun h h' => ne_of_gt (lt_of_eq_lt h h')
+
+    theorem ne_of_lt_le' : a < b → b ≤ c → c ≠ a :=
+      fun h h' => ne_of_gt (lt_of_lt_le h h')
+
+    theorem ne_of_le_lt' : a ≤ b → b < c → c ≠ a :=
+      fun h h' => ne_of_gt (lt_of_le_lt h h')
+
+    theorem ne_of_lt_lt' : a < b → b < c → c ≠ a :=
+      fun h h' => ne_of_gt (lt_of_lt_lt h h')
 
     variable {d : α}
 

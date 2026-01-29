@@ -1,4 +1,4 @@
-import Analysis2.logic
+import Analysis2.Logic
 noncomputable section
 set_option maxHeartbeats 5000
 namespace my

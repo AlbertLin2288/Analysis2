@@ -24,6 +24,12 @@ namespace SemiRing
 
   theorem one_ne_zero : (one : α) ≠ zero := ne_comm.mp zero_ne_one
 
+  theorem left_nonzero_of_mul_nonzero (a b : α) : a * b ≠ zero → a ≠ zero :=
+    fun h h' => (zero_mul b ▸ h' ▸ h) rfl
+
+  theorem right_nonzero_of_mul_nonzero (a b : α) : a * b ≠ zero → b ≠ zero :=
+    fun h h' => (mul_zero a ▸ h' ▸ h) rfl
+
 end SemiRing
 
 end my

@@ -110,6 +110,18 @@ namespace OrderedCommGroup
   theorem add_lt_add_right {a b : α} : ∀(c : α), a < b → a + c < b + c :=
     fun _ => contrapos le_of_add_le_add_right
 
+  theorem lt_add_of_pos_right (a : α) {b : α} : zero < b → a < a + b :=
+    fun h => lt_of_eq_lt (add_zero a).symm (add_lt_add_left a h)
+
+  theorem lt_add_of_pos_left (a : α) {b : α} : zero < b → a < b + a :=
+    fun h => lt_of_eq_lt (zero_add a).symm (add_lt_add_right a h)
+
+  theorem lt_add_le_of_pos_right {a b c : α} : zero < c → a ≤ b → a < b + c :=
+    fun h h' => lt_of_le_lt h' (lt_add_of_pos_right b h)
+
+  theorem lt_add_le_of_pos_left {a b c : α} : zero < c → a ≤ b → a < c + b :=
+    fun h h' => lt_of_le_lt h' (lt_add_of_pos_left b h)
+
   theorem lt_of_add_lt_add_right {a b c : α} : a + c < b + c → a < b := by
     intro h
     rw [←add_zero a, ←add_zero b, ←add_neg c, ←add_assoc, ←add_assoc]

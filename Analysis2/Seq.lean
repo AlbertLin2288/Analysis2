@@ -183,15 +183,18 @@ section conv
   theorem is_conv_of_sum {s s' : Seq α} : is_conv s → is_conv s' → is_conv (s + s') :=
     fun h h' => is_conv_of_conv_to (conv_to_sum_of_sum h.choose_spec h'.choose_spec)
 
-  theorem ne_of_conv_to_ne {s s' : Seq α} {a a' : α} (h : conv_to s a) (h' : conv_to s' a') (hne : a ≠ a') : s ≠ s' := by
-    intro he
+  theorem conv_to_unique {s : Seq α} {a a' : α} (h : conv_to s a) (h' : conv_to s a') : a = a' := by
+    apply byContradiction
+    intro hne
     have hne' : a-a' ≠ zero := fun h' => hne (eq_of_sub_eq_zero _ _ h')
     replace h := conv_to_sum_of_sum h (conv_to_neg_of_neg h')
     replace ⟨N, hN⟩ := h (abs (a - a')) (abs_of_nonzero_is_pos hne')
-    replace hN := lt_of_le_lt (triangle_sub_ge_sub' _ _) (hN N (le_self _))
-    replace hN := add_neg (abs (a - a')) ▸ sub_lt_of_sub_lt hN
-    replace hN := he ▸ nonzero_of_abs_nonzero (ne_of_lt hN).symm
-    exact (add_neg (s' N) ▸ hN) rfl
+    replace hN := hN N (le_self _)
+    rw [add_neg, zero, zero_add, abs_neg_eq_abs] at hN
+    exact not_lt_self _ hN
+
+  theorem ne_of_conv_to_ne {s s' : Seq α} {a a' : α} (h : conv_to s a) (h' : conv_to s' a') (hne : a ≠ a') : s ≠ s' :=
+    fun he => hne (conv_to_unique (he ▸ h) h')
 
   theorem conv_to_const_eq_const {a a' : α} : conv_to (const_seq a) a' → a = a' :=
     fun h => not_not.mp (fun h' => (ne_of_conv_to_ne (conv_to_of_const a) h h') rfl)
@@ -242,7 +245,7 @@ section conv
     inv_pos_is_pos zero_lt_two
 
   private theorem add_half : half + half = (one : α) :=
-    Eq.trans (mul_two_eq_add half).symm (inv_mul_cancel two two_ne_zero)
+    Eq.trans (mul_two_eq_add half).symm (inv_mul_cancel two_ne_zero)
 
   theorem conv_to_mul_of_mul {s s' : Seq α} {a a' : α} : conv_to s a → conv_to s' a' → conv_to (s * s') (a * a') := by
     intro h h' ε hε

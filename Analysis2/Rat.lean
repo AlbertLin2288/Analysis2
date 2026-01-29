@@ -538,7 +538,7 @@ namespace ℚ
     -- the more useful one :
     theorem inv_def' {a : ℚ} {h : a ≠ zero} : ⟨a, h⟩⁻¹ = a.inv' h := rfl
 
-    private theorem _mul_inv_cancel : ∀ (a : ℚ) (h0 : a ≠ zero), a * ⟨a, h0⟩⁻¹ = one := by
+    private theorem _mul_inv_cancel : ∀ {a : ℚ} (h0 : a ≠ zero), a * ⟨a, h0⟩⁻¹ = one := by
       intro a h0
       rw [mul_def, inv_def', inv_spec a.sys_of_repr_spec]
       unfold mul mul_fn mul_fn_fn inv_fn

@@ -370,12 +370,53 @@ namespace ℕ
     theorem add_le_add_iff_right {a b c : ℕ} : (a + c) ≤ (b + c) ↔ a ≤ b := by
       rw [add_comm, add_comm b, add_le_add_iff_left]
 
+    theorem add_le_add_of_le_right {a b : ℕ} (c : ℕ) : a ≤ b → (a + c) ≤ (b + c) :=
+      add_le_add_iff_right.mpr
 
-    theorem le_of_add_le_add_right {a b c : ℕ} :  (a + c) ≤ (b + c) → a ≤ b :=
+    theorem le_of_add_le_add_right {a b c : ℕ} : (a + c) ≤ (b + c) → a ≤ b :=
       add_le_add_iff_right.mp
+
+    theorem add_lt_add_iff_left {a b c : ℕ} :  (c + a) < (c + b) ↔ a < b := by
+      rw [←not_le_iff, ←not_le_iff, add_le_add_iff_left]
+
+    theorem add_lt_add_of_lt_left {a b : ℕ} (c : ℕ) : a < b → (c + a) < (c + b) :=
+      add_lt_add_iff_left.mpr
+
+    theorem lt_of_add_lt_add_left {a b c : ℕ} :  (c + a) < (c + b) → a < b :=
+      add_lt_add_iff_left.mp
+
+    theorem add_lt_add_iff_right {a b c : ℕ} : (a + c) < (b + c) ↔ a < b := by
+      rw [←not_le_iff, ←not_le_iff, add_le_add_iff_right]
+
+    theorem lt_of_add_lt_add_right {a b c : ℕ} : (a + c) < (b + c) → a < b :=
+      add_lt_add_iff_right.mp
+
+    theorem add_lt_add_of_lt_right {a b : ℕ} (c : ℕ) : a < b → (a + c) < (b + c) :=
+      add_lt_add_iff_right.mpr
 
     theorem add_le_le_le {a b c d : ℕ} : (a ≤ b) → (c ≤ d) → (a + c) ≤ (b + d) :=
       fun h1 h2 => le_trans _ _ _ ((add_le_add_iff_right (c := c)).mpr h1) ((add_le_add_iff_left (a := b)).mpr h2)
+
+    theorem le_of_add_le_le {a b c d : ℕ} : (a ≤ b) → (c ≤ d) → (a + c) ≤ (b + d) :=
+      fun h1 h2 => le_trans _ _ _ ((add_le_add_iff_right (c := c)).mpr h1) ((add_le_add_iff_left (a := b)).mpr h2)
+
+    theorem le_of_add_lt_le {a b c d : ℕ} : (a < b) → (c ≤ d) → (a + c) ≤ (b + d) :=
+      fun h h' => le_of_add_le_le (le_of_lt h) h'
+
+    theorem le_of_add_le_lt {a b c d : ℕ} : (a ≤ b) → (c < d) → (a + c) ≤ (b + d) :=
+      fun h h' => le_of_add_le_le h (le_of_lt h')
+
+    theorem le_of_add_lt_lt {a b c d : ℕ} : (a < b) → (c < d) → (a + c) ≤ (b + d) :=
+      fun h h' => le_of_add_le_le (le_of_lt h) (le_of_lt h')
+
+    theorem lt_of_add_lt_le {a b c d : ℕ} : (a < b) → (c ≤ d) → (a + c) < (b + d) :=
+      fun h h' => lt_of_lt_le (add_lt_add_of_lt_right c h) (add_le_add_of_le_left b h')
+
+    theorem lt_of_add_le_lt {a b c d : ℕ} : (a ≤ b) → (c < d) → (a + c) < (b + d) :=
+      fun h h' => lt_of_le_lt (add_le_add_of_le_right c h) (add_lt_add_of_lt_left b h')
+
+    theorem lt_of_add_lt_lt {a b c d : ℕ} : (a < b) → (c < d) → (a + c) < (b + d) :=
+      fun h h' => lt_of_add_le_lt (le_of_lt h) h'
 
     theorem zero_le_one : zero ≤ one := _zero.le_succ
 

@@ -50,7 +50,10 @@ class CommRing' (α : Type) [Zero α] [Add α] [One α] [Mul α] [Neg α] [CommM
 
 namespace CommRing'
   open Monoid CommMonoid CommGroup SemiRing CommSemiRing CommRing
-  variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Neg α] [Inv α] [CommMonoid α] [CommGroup α] [CommRing α] [CommRing' α]
+  variable {α : Type} [Zero α] [Add α] [One α] [Mul α] [Neg α] [CommMonoid α] [CommGroup α] [CommRing α] [CommRing' α]
+
+  theorem mul_nonzero_nonzero {a b : α} : a ≠ zero → b ≠ zero → a * b ≠ zero :=
+    fun h h' h'' => h' ((mul_eq_zero h'').resolve_left h)
 
 end CommRing'
 

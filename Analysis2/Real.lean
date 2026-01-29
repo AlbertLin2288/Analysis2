@@ -463,7 +463,7 @@ namespace ℝ
     private theorem inv_def' {a : ℝ} {h : a ≠ zero} : ⟨a, h⟩⁻¹ = a.inv' h := rfl
 
     set_option pp.proofs true
-    private theorem _mul_inv_cancel : ∀ (a : ℝ) (h0 : a ≠ zero), a * ⟨a, h0⟩⁻¹ = one := by
+    private theorem _mul_inv_cancel : ∀ {a : ℝ} (h0 : a ≠ zero), a * ⟨a, h0⟩⁻¹ = one := by
       intro a h0
       let ap := a.sys_of_repr
       let s := ap.s
@@ -1040,10 +1040,6 @@ namespace ℝ
       replace hN2 := le_of_le_lt (triangle_add_le_add _ _) hN2
       simp only [←add_assoc, sub_add_cancel] at hN2
       exact hN2
-
-  #print axioms archimedean
-
-
 
 end ℝ
 

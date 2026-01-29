@@ -86,6 +86,53 @@ namespace OrderedMonoid
   theorem neg_add_neg_is_nonpos {a b : α} : a < zero → b < zero → a + b ≤ zero :=
     fun h h' => (add_zero (zero:α)) ▸ le_of_add_lt_lt h h'
 
+  theorem le_add_of_nonneg_right (a : α) {b : α} : zero ≤ b → a ≤ a + b :=
+    fun h => le_of_eq_le (add_zero a).symm (add_le_add_left a h)
+
+  theorem le_add_of_pos_right (a : α) {b : α} : zero < b → a ≤ a + b :=
+    fun h => le_add_of_nonneg_right a (le_of_lt h)
+
+  theorem le_add_of_nonneg_left (a : α) {b : α} : zero ≤ b → a ≤ b + a :=
+    fun h => le_of_eq_le (zero_add a).symm (add_le_add_right a h)
+
+  theorem le_add_of_pos_left (a : α) {b : α} : zero < b → a ≤ b + a :=
+    fun h => le_add_of_nonneg_left a (le_of_lt h)
+
+  theorem le_add_le_of_nonneg_right {a b c : α} : zero ≤ c → a ≤ b → a ≤ b + c :=
+    fun h h' => le_of_le_le h' (le_add_of_nonneg_right b h)
+
+  theorem le_add_le_of_pos_right {a b c : α} : zero < c → a ≤ b → a ≤ b + c :=
+    fun h h' => le_add_le_of_nonneg_right (le_of_lt h) h'
+
+  theorem le_add_lt_of_nonneg_right {a b c : α} : zero ≤ c → a < b → a ≤ b + c :=
+    fun h h' => le_add_le_of_nonneg_right h (le_of_lt h')
+
+  theorem le_add_lt_of_pos_right {a b c : α} : zero < c → a < b → a ≤ b + c :=
+    fun h h' => le_add_le_of_nonneg_right (le_of_lt h) (le_of_lt h')
+
+  theorem le_add_le_of_nonneg_left {a b c : α} : zero ≤ c → a ≤ b → a ≤ c + b :=
+    fun h h' => le_of_le_le h' (le_add_of_nonneg_left b h)
+
+  theorem le_add_le_of_pos_left {a b c : α} : zero < c → a ≤ b → a ≤ c + b :=
+    fun h h' => le_add_le_of_nonneg_left (le_of_lt h) h'
+
+  theorem le_add_lt_of_nonneg_left {a b c : α} : zero ≤ c → a < b → a ≤ c + b :=
+    fun h h' => le_add_le_of_nonneg_left h (le_of_lt h')
+
+  theorem le_add_lt_of_pos_left {a b c : α} : zero < c → a < b → a ≤ c + b :=
+    fun h h' => le_add_le_of_nonneg_left (le_of_lt h) (le_of_lt h')
+
+  theorem lt_add_lt_of_nonneg_right {a b c : α} : zero ≤ c → a < b → a < b + c :=
+    fun h h' => lt_of_lt_le h' (le_add_of_nonneg_right b h)
+
+  theorem lt_add_lt_of_pos_right {a b c : α} : zero < c → a < b → a < b + c :=
+    fun h h' => lt_add_lt_of_nonneg_right (le_of_lt h) h'
+
+  theorem lt_add_lt_of_nonneg_left {a b c : α} : zero ≤ c → a < b → a < c + b :=
+    fun h h' => lt_of_lt_le h' (le_add_of_nonneg_left b h)
+
+  theorem lt_add_lt_of_pos_left {a b c : α} : zero < c → a < b → a < c + b :=
+    fun h h' => lt_add_lt_of_nonneg_left (le_of_lt h) h'
 
 end OrderedMonoid
 
